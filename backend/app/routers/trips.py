@@ -186,4 +186,32 @@ async def copy_trip(
         )
     return new_trip
 
+
+# ── GET /public/{share_code} ─────────────────────────────────────────
+@router.get(
+    "/public/{share_code}",
+    response_model=TripRead,
+    summary="View a public trip by share code (no auth)",
+    description="Anyone with the share code can view the trip. No authentication required.",
+)
+async def get_public_trip(
+    share_code: str,
+    db: AsyncSession = Depends(get_db),
+):
+    from sqlalchemy import select
+    from sqlalchemy.orm import selectinload
+    from app.models.trip import Trip
+    from app.models.stop import Stop
+
+    q = (
+        select(Trip)
+        .where(Trip.share_code == share_code, Trip.is_public == True)
+        .options(selectinload(Trip.stops).selectinload(Stop.city))
+    )
+    result = await db.execute(q)
+    trip = result.scalar_one_or_none()
+    if not trip:
+        raise HTTPException(status_code=404, detail="Trip not found or not public")
+    return trip
+
 # SELF-CHECK: dynamic data only ✓ | validated ✓ | paginated ✓ | error handled ✓

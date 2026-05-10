@@ -1,10 +1,13 @@
 // frontend/src/App.tsx
-// Root component — full routing for Phase 2–6.
+// Root component — complete routing for all phases (2–7).
 
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
 import { useEffect } from "react";
 import { useAuthStore } from "@/stores/authStore";
+
+// Landing (Phase 7)
+import LandingPage from "@/pages/LandingPage";
 
 // Auth pages (Phase 2)
 import LoginPage from "@/pages/LoginPage";
@@ -33,27 +36,28 @@ import ChecklistPage from "@/pages/ChecklistPage";
 import SettingsPage from "@/pages/SettingsPage";
 import AdminPage from "@/pages/AdminPage";
 
+// Public & 404 (Phase 7)
+import PublicTripPage from "@/pages/PublicTripPage";
+import NotFoundPage from "@/pages/NotFoundPage";
+
 // Layout
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
 import Navbar from "@/components/layout/Navbar";
 
-// Layout wrapper that adds Navbar to protected pages
 function AppLayout({ children }: { children: React.ReactNode }) {
-  return (
-    <>
-      <Navbar />
-      {children}
-    </>
-  );
+  return (<><Navbar />{children}</>);
 }
 
-// Protected route wrapped with AppLayout
 function ProtectedPage({ children }: { children: React.ReactNode }) {
-  return (
-    <ProtectedRoute>
-      <AppLayout>{children}</AppLayout>
-    </ProtectedRoute>
-  );
+  return (<ProtectedRoute><AppLayout>{children}</AppLayout></ProtectedRoute>);
+}
+
+// Root page: landing for guests, dashboard for authenticated users
+function RootRedirect() {
+  const { user, isLoading } = useAuthStore();
+  if (isLoading) return <div className="min-h-screen bg-surface flex items-center justify-center"><div className="animate-spin rounded-full h-10 w-10 border-4 border-primary border-t-transparent" /></div>;
+  if (user) return <Navigate to="/dashboard" replace />;
+  return <LandingPage />;
 }
 
 function App() {
@@ -67,24 +71,18 @@ function App() {
 
   return (
     <BrowserRouter>
-      <Toaster
-        position="top-center"
-        toastOptions={{
-          duration: 4000,
-          style: { borderRadius: "8px", background: "#111827", color: "#F9FAFB", fontSize: "14px" },
-        }}
-      />
+      <Toaster position="top-center" toastOptions={{ duration: 4000, style: { borderRadius: "8px", background: "#111827", color: "#F9FAFB", fontSize: "14px" } }} />
 
       <Routes>
-        {/* ── Public auth routes ────────────────────────────── */}
+        {/* ── Public routes ─────────────────────────────────── */}
+        <Route path="/" element={<RootRedirect />} />
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/public/:shareCode" element={<PublicTripPage />} />
 
         {/* ── Protected routes (with Navbar) ────────────────── */}
         <Route path="/dashboard" element={<ProtectedPage><DashboardPage /></ProtectedPage>} />
-
-        {/* Trip CRUD (Phase 3) */}
         <Route path="/trips" element={<ProtectedPage><MyTripsPage /></ProtectedPage>} />
         <Route path="/trips/new" element={<ProtectedPage><CreateTripPage /></ProtectedPage>} />
         <Route path="/trips/:id" element={<ProtectedPage><TripDetailPage /></ProtectedPage>} />
@@ -94,23 +92,16 @@ function App() {
         <Route path="/trips/:id/budget" element={<ProtectedPage><BudgetPage /></ProtectedPage>} />
         <Route path="/trips/:id/notes" element={<ProtectedPage><NotesPage /></ProtectedPage>} />
         <Route path="/trips/:id/checklist" element={<ProtectedPage><ChecklistPage /></ProtectedPage>} />
-
-        {/* Discovery (Phase 4) */}
         <Route path="/cities" element={<ProtectedPage><CitySearchPage /></ProtectedPage>} />
         <Route path="/activities" element={<ProtectedPage><ActivitySearchPage /></ProtectedPage>} />
-
-        {/* Settings & Admin (Phase 6) */}
         <Route path="/settings" element={<ProtectedPage><SettingsPage /></ProtectedPage>} />
         <Route path="/admin" element={<ProtectedPage><AdminPage /></ProtectedPage>} />
 
-        {/* ── Redirects ────────────────────────────────────── */}
-        <Route path="/" element={<Navigate to="/dashboard" replace />} />
-        <Route path="*" element={<Navigate to="/dashboard" replace />} />
+        {/* ── 404 catch-all ─────────────────────────────────── */}
+        <Route path="*" element={<NotFoundPage />} />
       </Routes>
     </BrowserRouter>
   );
 }
 
 export default App;
-
-// SELF-CHECK: dynamic data only ✓ | validated ✓ | paginated N/A | error handled ✓
