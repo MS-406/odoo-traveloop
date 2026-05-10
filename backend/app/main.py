@@ -45,7 +45,17 @@ async def health_check():
 
 # ── Router Registration ──────────────────────────────────────────────
 from app.routers.auth import router as auth_router  # noqa: E402
+from app.routers.trips import router as trips_router  # noqa: E402 — Phase 3
+from app.routers.stops import router as stops_router  # noqa: E402 — Phase 3
+from app.routers.cities import router as cities_router  # noqa: E402 — Phase 4
+from app.routers.activities import router as activities_router  # noqa: E402 — Phase 4
+from app.routers.budget import router as budget_router  # noqa: E402 — Phase 4
 
 app.include_router(auth_router)
+app.include_router(trips_router)
+app.include_router(stops_router)
+app.include_router(cities_router)
+app.include_router(activities_router)
+app.include_router(budget_router)
 
 # SELF-CHECK: dynamic data only ✓ | validated ✓ | paginated N/A | error handled ✓
