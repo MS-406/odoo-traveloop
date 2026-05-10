@@ -20,12 +20,13 @@
   /* Custom scrollbar for a polished look */
   ::-webkit-scrollbar {
     width: 6px;
+    height: 6px;
   }
   ::-webkit-scrollbar-track {
     @apply bg-surface;
   }
   ::-webkit-scrollbar-thumb {
-    @apply bg-text-muted rounded-full;
+    @apply bg-text-muted/50 rounded-full;
   }
   ::-webkit-scrollbar-thumb:hover {
     @apply bg-text-secondary;
@@ -34,13 +35,22 @@
 
 /* ── Component layer ──────────────────────────────────────────────────── */
 @layer components {
-  /* Glassmorphism card style — reusable across the app */
+  /* Glassmorphism card style — updated for premium design */
   .glass-card {
-    @apply bg-white/80 backdrop-blur-lg border border-surface-border rounded-lg shadow-sm;
+    @apply bg-surface-card/90 backdrop-blur-xl border border-surface-border rounded-2xl shadow-sm hover:shadow-ambient transition-all duration-300;
   }
 
   /* Gradient text utility */
   .gradient-text {
-    @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
+    @apply bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent;
+  }
+  
+  /* Hide scrollbar utility for horizontal scroll areas */
+  .hide-scrollbar {
+    -ms-overflow-style: none;  /* IE and Edge */
+    scrollbar-width: none;  /* Firefox */
+  }
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
   }
 }

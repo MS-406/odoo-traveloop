@@ -10,7 +10,7 @@ const FEATURES = [
   { icon: DollarSign, title: "Budget Tracking", desc: "Real-time budget breakdown by category and city with visual charts" },
   { icon: ListChecks, title: "Packing Lists", desc: "Category-grouped checklists with progress tracking" },
   { icon: FileText, title: "Trip Notes", desc: "Attach notes to trips and individual stops" },
-  { icon: Calendar, title: "Calendar View", desc: "See your itinerary in timeline or day-grid calendar format" },
+  { icon: Calendar, title: "Calendar View", desc: "See your itinerary in timeline or day-grid format" },
   { icon: Shield, title: "Share & Collaborate", desc: "Make trips public and share via link with anyone" },
 ];
 
@@ -22,95 +22,120 @@ const STATS = [
 
 export default function LandingPage() {
   return (
-    <div className="min-h-screen bg-white">
-      {/* Navbar */}
-      <nav className="sticky top-0 z-40 bg-white/80 backdrop-blur-lg border-b border-surface-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-14">
-          <span className="text-xl font-bold gradient-text">🌍 Traveloop</span>
-          <div className="flex items-center gap-3">
-            <Link to="/login" className="text-sm font-medium text-text-secondary hover:text-text-primary transition-colors">Sign In</Link>
-            <Link to="/signup" className="px-4 py-2 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary-dark transition-all">Get Started</Link>
+    <div className="min-h-screen bg-surface font-sans">
+      {/* Navbar - Glassmorphism */}
+      <nav className="fixed w-full top-0 z-50 bg-white/70 backdrop-blur-md border-b border-surface-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex items-center justify-between h-16">
+          <Link to="/" className="text-2xl font-display font-bold text-primary flex items-center gap-2">
+            <Globe className="h-6 w-6 text-accent" /> Traveloop
+          </Link>
+          <div className="flex items-center gap-4">
+            <Link to="/login" className="text-sm font-medium text-text-secondary hover:text-primary transition-colors">Sign In</Link>
+            <Link to="/signup" className="px-5 py-2.5 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary-dark transition-all shadow-md shadow-primary/20">Get Started</Link>
           </div>
         </div>
       </nav>
 
-      {/* Hero */}
-      <section className="relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-transparent to-secondary/5" />
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 sm:py-32 relative">
-          <div className="max-w-3xl mx-auto text-center space-y-6">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 text-primary text-sm font-medium">
-              <Globe className="h-4 w-4" /> Your personal travel planner
+      {/* Hero Section */}
+      <section className="relative pt-32 pb-20 lg:pt-48 lg:pb-32 overflow-hidden">
+        {/* Background elements */}
+        <div className="absolute top-0 right-0 -translate-y-12 translate-x-1/3 w-[800px] h-[800px] bg-primary/5 rounded-full blur-3xl" />
+        <div className="absolute bottom-0 left-0 translate-y-1/3 -translate-x-1/4 w-[600px] h-[600px] bg-accent/5 rounded-full blur-3xl" />
+        
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="max-w-4xl mx-auto text-center">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-surface-card border border-surface-border text-sm font-medium text-primary mb-8 shadow-ambient">
+              <span className="flex h-2 w-2 rounded-full bg-accent animate-pulse"></span>
+              Your personal travel concierge
             </div>
-            <h1 className="text-4xl sm:text-6xl font-bold text-text-primary leading-tight">
+            
+            <h1 className="text-5xl md:text-7xl font-display font-bold text-text-primary leading-[1.1] tracking-tight mb-6">
               Plan Your Dream Trip <br />
-              <span className="gradient-text">With Confidence</span>
+              <span className="text-transparent bg-clip-text bg-gradient-to-r from-primary to-accent">With Absolute Confidence</span>
             </h1>
-            <p className="text-lg text-text-secondary max-w-2xl mx-auto">
-              Build multi-city itineraries, discover activities, track budgets, and share your plans — all in one beautiful app.
+            
+            <p className="text-xl text-text-secondary max-w-2xl mx-auto mb-10 leading-relaxed">
+              Build multi-city itineraries, discover activities, track budgets, and share your plans — beautifully organized in one place.
             </p>
-            <div className="flex flex-col sm:flex-row items-center justify-center gap-3 pt-4">
-              <Link to="/signup" className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 rounded-lg bg-primary text-white font-medium hover:bg-primary-dark active:scale-[0.98] transition-all shadow-lg shadow-primary/25">
-                Start Planning Free <ArrowRight className="h-4 w-4" />
+            
+            <div className="flex flex-col sm:flex-row items-center justify-center gap-4">
+              <Link to="/signup" className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-primary text-white font-medium hover:bg-primary-dark hover:-translate-y-0.5 active:translate-y-0 transition-all shadow-lg shadow-primary/30 text-lg">
+                Start Planning Free <ArrowRight className="h-5 w-5" />
               </Link>
-              <Link to="/login" className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-3 rounded-lg border border-surface-border font-medium text-text-secondary hover:bg-surface transition-all">
-                Sign In
+              <Link to="/login" className="w-full sm:w-auto flex items-center justify-center gap-2 px-8 py-4 rounded-xl bg-surface-card border-2 border-surface-border font-medium text-text-primary hover:border-primary/20 hover:bg-primary/5 transition-all text-lg">
+                Welcome Back
               </Link>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Stats */}
-      <section className="border-y border-surface-border bg-surface/50">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <div className="grid grid-cols-3 gap-8 text-center">
+      {/* Stats Bar */}
+      <section className="relative z-20 -mt-10 max-w-5xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-surface-card/80 backdrop-blur-xl border border-surface-border rounded-2xl shadow-ambient p-8">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 text-center divide-y md:divide-y-0 md:divide-x divide-surface-border">
             {STATS.map((s) => (
-              <div key={s.label}>
-                <p className="text-3xl sm:text-4xl font-bold gradient-text">{s.value}</p>
-                <p className="text-sm text-text-muted mt-1">{s.label}</p>
+              <div key={s.label} className="pt-4 md:pt-0 first:pt-0">
+                <p className="text-4xl font-display font-bold text-primary">{s.value}</p>
+                <p className="text-sm font-medium text-text-secondary uppercase tracking-wider mt-2">{s.label}</p>
               </div>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Features */}
-      <section className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="text-center mb-12">
-          <h2 className="text-3xl font-bold text-text-primary">Everything You Need</h2>
-          <p className="text-text-secondary mt-2">Powerful features to make trip planning effortless</p>
-        </div>
-        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-          {FEATURES.map((f) => (
-            <div key={f.title} className="glass-card p-6 hover:shadow-md transition-all group">
-              <div className="p-2 rounded-lg bg-primary/10 w-fit group-hover:bg-primary/20 transition-colors">
-                <f.icon className="h-6 w-6 text-primary" />
+      {/* Feature Grid */}
+      <section className="py-24 bg-surface">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-text-primary mb-4">Everything you need in one suite</h2>
+            <p className="text-lg text-text-secondary">Powerful tools designed to make trip planning effortless and enjoyable.</p>
+          </div>
+          
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+            {FEATURES.map((f) => (
+              <div key={f.title} className="bg-surface-card rounded-2xl p-8 border border-surface-border shadow-sm hover:shadow-ambient hover:-translate-y-1 transition-all duration-300 group">
+                <div className="h-14 w-14 rounded-xl bg-primary/5 flex items-center justify-center mb-6 group-hover:bg-primary/10 transition-colors">
+                  <f.icon className="h-7 w-7 text-primary" />
+                </div>
+                <h3 className="text-xl font-display font-bold text-text-primary mb-3">{f.title}</h3>
+                <p className="text-text-secondary leading-relaxed">{f.desc}</p>
               </div>
-              <h3 className="font-semibold text-text-primary mt-4">{f.title}</h3>
-              <p className="text-sm text-text-secondary mt-2">{f.desc}</p>
-            </div>
-          ))}
+            ))}
+          </div>
         </div>
       </section>
 
-      {/* CTA */}
-      <section className="bg-gradient-to-r from-primary to-secondary">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 text-center">
-          <h2 className="text-3xl font-bold text-white">Ready to Explore?</h2>
-          <p className="text-white/80 mt-2 max-w-xl mx-auto">Join Traveloop and start building your perfect itinerary today.</p>
-          <Link to="/signup" className="inline-flex items-center gap-2 mt-6 px-8 py-3 rounded-lg bg-white text-primary font-medium hover:bg-white/90 active:scale-[0.98] transition-all shadow-lg">
-            Create Free Account <ArrowRight className="h-4 w-4" />
+      {/* CTA Section */}
+      <section className="py-24 relative overflow-hidden">
+        <div className="absolute inset-0 bg-primary"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-primary via-primary to-accent opacity-90"></div>
+        
+        <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10 text-center">
+          <h2 className="text-4xl md:text-5xl font-display font-bold text-white mb-6">Ready to Explore the World?</h2>
+          <p className="text-xl text-primary-light mb-10">Join Traveloop today and experience the future of travel planning.</p>
+          <Link to="/signup" className="inline-flex items-center justify-center gap-2 px-10 py-4 rounded-xl bg-white text-primary font-bold hover:bg-surface-card hover:scale-105 active:scale-95 transition-all shadow-xl text-lg">
+            Create Your Free Account <ArrowRight className="h-5 w-5" />
           </Link>
         </div>
       </section>
 
       {/* Footer */}
-      <footer className="bg-text-primary text-white/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
-          <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
-            <span className="text-lg font-bold text-white">🌍 Traveloop</span>
-            <p className="text-sm">© {new Date().getFullYear()} Traveloop. Built with ❤️ for travelers.</p>
+      <footer className="bg-text-primary pt-16 pb-8 border-t border-surface-border">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-12">
+            <div className="flex items-center gap-2">
+              <Globe className="h-8 w-8 text-accent" />
+              <span className="text-2xl font-display font-bold text-white">Traveloop</span>
+            </div>
+            <div className="flex gap-6">
+              <a href="#" className="text-text-muted hover:text-white transition-colors">About</a>
+              <a href="#" className="text-text-muted hover:text-white transition-colors">Privacy</a>
+              <a href="#" className="text-text-muted hover:text-white transition-colors">Terms</a>
+            </div>
+          </div>
+          <div className="text-center border-t border-text-secondary/30 pt-8">
+            <p className="text-text-muted text-sm">© {new Date().getFullYear()} Traveloop. Designed for travelers.</p>
           </div>
         </div>
       </footer>

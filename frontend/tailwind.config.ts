@@ -10,52 +10,43 @@ const config: Config = {
     extend: {
       colors: {
         primary: {
-          DEFAULT: "#2563EB",
-          light: "#93C5FD",
-          dark: "#1D4ED8",
+          DEFAULT: "#1E3A8A",
+          light: "#3B82F6",
+          dark: "#1E40AF",
         },
         secondary: {
-          DEFAULT: "#7C3AED",
-          light: "#C4B5FD",
-          dark: "#6D28D9",
+          DEFAULT: "#FF6B6B",
+          light: "#FF8787",
+          dark: "#E03131",
         },
         accent: {
-          DEFAULT: "#F59E0B",
-          light: "#FDE68A",
-          dark: "#D97706",
-        },
-        danger: {
-          DEFAULT: "#EF4444",
-          light: "#FECACA",
-          dark: "#B91C1C",
-        },
-        success: {
           DEFAULT: "#10B981",
-          light: "#A7F3D0",
+          light: "#34D399",
           dark: "#059669",
         },
         surface: {
-          DEFAULT: "#F9FAFB",
+          DEFAULT: "#F8FAFC",
           card: "#FFFFFF",
-          border: "#E5E7EB",
+          border: "#E2E8F0",
         },
         text: {
-          primary: "#111827",
-          secondary: "#6B7280",
-          muted: "#9CA3AF",
+          primary: "#0F172A",
+          secondary: "#475569",
+          muted: "#94A3B8",
         },
       },
       fontFamily: {
-        // Inter for clean, modern typography
+        // Inter for body, Outfit for headings
         sans: ["Inter", "system-ui", "sans-serif"],
+        display: ["Outfit", "system-ui", "sans-serif"],
       },
       borderRadius: {
-        lg: "8px",  // Cards
-        xl: "12px", // Modals
+        lg: "12px",  // Cards
+        xl: "16px", // Modals
       },
-      spacing: {
-        // 8px base grid enforced via Tailwind defaults (p-2=8px, p-4=16px, etc.)
-      },
+      boxShadow: {
+        ambient: "0 4px 20px 0 rgba(30, 58, 138, 0.08)",
+      }
     },
   },
   plugins: [],

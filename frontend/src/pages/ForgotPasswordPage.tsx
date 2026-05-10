@@ -35,82 +35,81 @@ export default function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-accent/5 via-surface to-primary/5 flex items-center justify-center px-4 py-12">
-      <div className="fixed inset-0 overflow-hidden pointer-events-none">
-        <div className="absolute -top-32 -left-32 w-96 h-96 bg-accent/10 rounded-full blur-3xl animate-pulse" />
-      </div>
+    <div className="min-h-screen bg-surface flex items-center justify-center px-4 py-12 relative overflow-hidden">
+      {/* Decorative background orbs */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] bg-accent/20 rounded-full blur-[100px] animate-pulse" />
 
-      <div className="relative w-full max-w-md">
-        <div className="glass-card p-8 space-y-6">
-          <div className="text-center space-y-2">
-            <div className="inline-flex items-center justify-center w-14 h-14 rounded-xl bg-accent/10 mb-2">
-              <Mail className="h-7 w-7 text-accent" />
+      <div className="relative w-full max-w-md z-10">
+        <div className="glass-card p-8 sm:p-10 space-y-8">
+          <div className="text-center space-y-3">
+            <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl bg-accent/10 mb-2 shadow-sm">
+              <Mail className="h-8 w-8 text-accent" />
             </div>
-            <h1 className="text-2xl font-bold text-text-primary">Reset your password</h1>
-            <p className="text-sm text-text-secondary">
+            <h1 className="text-3xl font-display font-bold text-text-primary tracking-tight">Reset your password</h1>
+            <p className="text-text-secondary">
               Enter your email and we'll send you a reset link
             </p>
           </div>
 
           {submitted ? (
-            <div className="text-center space-y-4 py-4">
-              <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-success/10">
-                <Send className="h-8 w-8 text-success" />
+            <div className="text-center space-y-6 py-4">
+              <div className="inline-flex items-center justify-center w-20 h-20 rounded-full bg-accent/10 shadow-sm">
+                <Send className="h-10 w-10 text-accent" />
               </div>
-              <p className="text-sm text-text-secondary">
+              <p className="text-text-secondary">
                 Check your inbox for a password reset link. If you don't see it, check your spam folder.
               </p>
               <Link
                 to="/login"
-                className="inline-flex items-center gap-2 text-sm text-primary font-medium hover:text-primary-dark transition-colors"
+                className="inline-flex items-center gap-2 text-sm text-primary font-bold hover:text-primary-dark transition-colors bg-primary/5 px-6 py-3 rounded-xl"
               >
                 <ArrowLeft className="h-4 w-4" />
                 Back to login
               </Link>
             </div>
           ) : (
-            <form onSubmit={handleSubmit(onSubmit)} className="space-y-5" noValidate>
+            <form onSubmit={handleSubmit(onSubmit)} className="space-y-6" noValidate>
               <div>
-                <label htmlFor="forgot-email" className="block text-sm font-medium text-text-primary mb-1.5">
+                <label htmlFor="forgot-email" className="block text-sm font-medium text-text-primary mb-2">
                   Email
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
+                  <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-text-muted" />
                   <input
                     id="forgot-email"
                     type="email"
                     autoComplete="email"
                     placeholder="you@example.com"
-                    className={`w-full pl-10 pr-4 py-2.5 rounded-lg border bg-white text-sm transition-colors
-                      focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary
-                      ${errors.email ? "border-danger" : "border-surface-border"}`}
+                    className={`w-full pl-10 pr-4 py-3 rounded-lg border bg-surface-card text-sm transition-all
+                      focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary shadow-sm
+                      ${errors.email ? "border-danger" : "border-surface-border hover:border-text-muted"}`}
                     {...register("email")}
                   />
                 </div>
                 {errors.email && (
-                  <p className="mt-1 text-xs text-danger">{errors.email.message}</p>
+                  <p className="mt-1.5 text-sm font-medium text-danger">{errors.email.message}</p>
                 )}
               </div>
 
               <button
                 type="submit"
-                className="w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-lg
-                  bg-accent text-white font-medium text-sm
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 rounded-xl
+                  bg-accent text-white font-bold text-base shadow-sm
                   hover:bg-accent-dark active:scale-[0.98] transition-all"
               >
-                <Send className="h-4 w-4" />
+                <Send className="h-5 w-5" />
                 Send Reset Link
               </button>
 
-              <p className="text-center">
+              <div className="pt-2 text-center">
                 <Link
                   to="/login"
-                  className="inline-flex items-center gap-1 text-sm text-text-secondary hover:text-text-primary transition-colors"
+                  className="inline-flex items-center gap-1.5 text-sm font-medium text-text-secondary hover:text-primary transition-colors"
                 >
-                  <ArrowLeft className="h-3 w-3" />
+                  <ArrowLeft className="h-4 w-4" />
                   Back to login
                 </Link>
-              </p>
+              </div>
             </form>
           )}
         </div>
