@@ -112,7 +112,7 @@ export default function AiTripOptimizerPage() {
       const msg = err?.response?.data?.detail || "AI optimization failed. Please try again.";
       setErrorMsg(msg);
       setStatus("error");
-      toast.error(msg);
+      toast.error(msg, { id: "ai-optimizer-error" });
     }
   };
 
