@@ -1,0 +1,39 @@
+{
+  "name": "traveloop-frontend",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "react": "^18",
+    "react-dom": "^18",
+    "react-router-dom": "^6",
+    "axios": "^1",
+    "zustand": "^4",
+    "react-hook-form": "^7",
+    "zod": "^3",
+    "@hookform/resolvers": "^3",
+    "recharts": "^2",
+    "@hello-pangea/dnd": "^16",
+    "react-hot-toast": "^2",
+    "react-day-picker": "^8",
+    "date-fns": "^3",
+    "lucide-react": "^0.400",
+    "clsx": "^2",
+    "tailwind-merge": "^2"
+  },
+  "devDependencies": {
+    "typescript": "^5",
+    "tailwindcss": "^3",
+    "postcss": "^8",
+    "autoprefixer": "^10",
+    "@types/react": "^18",
+    "@types/react-dom": "^18",
+    "vite": "^5",
+    "@vitejs/plugin-react": "^4"
+  }
+}

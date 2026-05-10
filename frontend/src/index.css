@@ -1,0 +1,46 @@
+/* frontend/src/index.css */
+/* Tailwind directives + global base styles */
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+/* ── Base layer overrides ─────────────────────────────────────────────── */
+@layer base {
+  /* Smooth scrolling for the entire app */
+  html {
+    scroll-behavior: smooth;
+  }
+
+  /* Remove default focus outlines and add accessible custom ones */
+  *:focus-visible {
+    @apply outline-2 outline-offset-2 outline-primary;
+  }
+
+  /* Custom scrollbar for a polished look */
+  ::-webkit-scrollbar {
+    width: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    @apply bg-surface;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-text-muted rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-text-secondary;
+  }
+}
+
+/* ── Component layer ──────────────────────────────────────────────────── */
+@layer components {
+  /* Glassmorphism card style — reusable across the app */
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-lg border border-surface-border rounded-lg shadow-sm;
+  }
+
+  /* Gradient text utility */
+  .gradient-text {
+    @apply bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent;
+  }
+}
