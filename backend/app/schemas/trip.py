@@ -49,6 +49,8 @@ class CityBrief(BaseModel):
     image_url: str | None = None
 
 
+from decimal import Decimal
+
 # ── Activity brief (nested inside StopActivityRead) ──────────────────
 class ActivityBrief(BaseModel):
     """Minimal activity info embedded in stop activity responses."""
@@ -57,7 +59,7 @@ class ActivityBrief(BaseModel):
     id: uuid.UUID
     name: str
     type: str
-    cost: str
+    cost: Decimal = Decimal("0")
     duration_min: int | None = None
     image_url: str | None = None
 
