@@ -43,8 +43,9 @@ async def health_check():
     return {"status": "healthy", "app": settings.APP_NAME}
 
 
-# ── Router Registration ──────────────────────────────────────────────────
-# Routers will be added in Phase 2+ as they are implemented.
-# Example: app.include_router(auth_router, prefix="/auth", tags=["auth"])
+# ── Router Registration ──────────────────────────────────────────────
+from app.routers.auth import router as auth_router  # noqa: E402
+
+app.include_router(auth_router)
 
 # SELF-CHECK: dynamic data only ✓ | validated ✓ | paginated N/A | error handled ✓
