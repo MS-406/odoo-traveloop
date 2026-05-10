@@ -1,5 +1,7 @@
 # 🌍 Traveloop — Personalized Travel Planning
 
+Video Link : https://drive.google.com/file/d/1mtFCtGENQ5gkehu3XtfNJDx77Ae3hbZI/view?usp=sharing
+
 A full-stack personalized travel planning application built with FastAPI + React.
 
 ---
