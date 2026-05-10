@@ -1,16 +1,17 @@
 // frontend/src/pages/TripDetailPage.tsx
-// Trip overview with stops summary, actions.
-// Depends on: Phase 3 / tripStore, StopCard, ShareButton
+// Trip overview with stops summary, inline budget, and activity suggestions.
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Calendar, Edit, MapPin, Plus, Route, Trash2, DollarSign, FileText, ListChecks, Globe, X, Check } from "lucide-react";
+import { ArrowLeft, Calendar, Edit, MapPin, Plus, Route, Trash2, DollarSign, FileText, ListChecks, Globe, X, Loader2 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useTripStore } from "@/stores/tripStore";
 import { activitiesApi, type Activity } from "@/api/activities";
+import { budgetApi, type BudgetSummary, type BudgetItem } from "@/api/budget";
 import StopCard from "@/components/trips/StopCard";
 import ShareButton from "@/components/trips/ShareButton";
 import AddToTripModal from "@/components/trips/AddToTripModal";
+import AddBudgetItemModal from "@/components/budget/AddBudgetItemModal";
 import toast from "react-hot-toast";
 
 export default function TripDetailPage() {
@@ -21,26 +22,40 @@ export default function TripDetailPage() {
   const [removedSuggestionIds, setRemovedSuggestionIds] = useState<Set<string>>(new Set());
   const [activityToAddToTrip, setActivityToAddToTrip] = useState<Activity | null>(null);
 
+  // Budget state
+  const [budget, setBudget] = useState<BudgetSummary | null>(null);
+  const [budgetLoading, setBudgetLoading] = useState(false);
+  const [showBudgetModal, setShowBudgetModal] = useState(false);
+  const [budgetItemToEdit, setBudgetItemToEdit] = useState<BudgetItem | null>(null);
+  const [showBudgetDetails, setShowBudgetDetails] = useState(false);
+
   useEffect(() => { if (id) fetchTrip(id); }, [id, fetchTrip]);
+
+  const fetchBudget = useCallback(async () => {
+    if (!id) return;
+    setBudgetLoading(true);
+    try {
+      const { data } = await budgetApi.get(id);
+      setBudget(data);
+    } catch { /* silent */ }
+    finally { setBudgetLoading(false); }
+  }, [id]);
+
+  useEffect(() => { fetchBudget(); }, [fetchBudget]);
 
   useEffect(() => {
     if (activeTrip?.stops.length) {
       (async () => {
         try {
-          // Fetch activities for each city in the trip
           const cityIds = [...new Set(activeTrip.stops.map(s => s.city_id))];
           const allSuggestions: Activity[] = [];
-          
-          for (const cityId of cityIds.slice(0, 3)) { // Limit to first 3 cities to avoid over-fetching
+          for (const cityId of cityIds.slice(0, 3)) {
             const { data } = await activitiesApi.search({ city_id: cityId, limit: 5 });
             allSuggestions.push(...data.items);
           }
-          
-          // Filter out activities already added to the trip
           const addedActivityIds = new Set(
-            activeTrip.stops.flatMap(s => s.stop_activities.map(sa => sa.activity_id))
+            activeTrip.stops.flatMap(s => (s.stop_activities || []).map(sa => sa.activity_id))
           );
-          
           setSuggestedActivities(
             allSuggestions.filter(a => !addedActivityIds.has(a.id)).slice(0, 10)
           );
@@ -59,12 +74,36 @@ export default function TripDetailPage() {
 
   const handleDeleteStop = async (stopId: string) => {
     if (!confirm("Remove this stop?")) return;
-    try { await deleteStop(stopId); toast.success("Stop removed"); }
+    try { await deleteStop(stopId); toast.success("Stop removed"); fetchBudget(); }
     catch { toast.error("Failed to remove stop"); }
   };
 
   const removeSuggestion = (activityId: string) => {
     setRemovedSuggestionIds(prev => new Set(prev).add(activityId));
+  };
+
+  const handleActivityAdded = () => {
+    if (id) fetchTrip(id);
+    fetchBudget();
+  };
+
+  const handleDeleteBudgetItem = async (itemId: string) => {
+    if (!confirm("Remove this expense?")) return;
+    try {
+      await budgetApi.deleteItem(itemId);
+      toast.success("Expense removed");
+      fetchBudget();
+    } catch { toast.error("Failed to remove"); }
+  };
+
+  const handleEditBudgetItem = (item: BudgetItem) => {
+    setBudgetItemToEdit(item);
+    setShowBudgetModal(true);
+  };
+
+  const closeBudgetModal = () => {
+    setShowBudgetModal(false);
+    setBudgetItemToEdit(null);
   };
 
   if (isTripLoading || !activeTrip) {
@@ -75,22 +114,16 @@ export default function TripDetailPage() {
     );
   }
 
-  // Calculate budget stats
-  const totalBudget = parseFloat(activeTrip.total_budget || "0");
-  const totalSpent = parseFloat(activeTrip.total_budget || "0"); // Placeholder for actual spent logic if different
-
+  const totalBudget = budget ? parseFloat(budget.total_budget) : 0;
   const visibleSuggestions = suggestedActivities.filter(a => !removedSuggestionIds.has(a.id));
 
   return (
     <div className="min-h-screen bg-surface font-sans pb-24">
       {/* Hero Section */}
       <div className="relative h-72 sm:h-96 w-full">
-        {/* Placeholder for destination image */}
         <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent overflow-hidden">
             <img src={activeTrip.cover_photo || "https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e?q=80&w=2000&auto=format&fit=crop"} alt="Destination" className="w-full h-full object-cover opacity-60 mix-blend-overlay" />
         </div>
-        
-        {/* Glassmorphism Overlay */}
         <div className="absolute bottom-0 inset-x-0 bg-surface-card/60 backdrop-blur-xl border-t border-surface-border p-6 sm:p-8">
           <div className="max-w-5xl mx-auto flex flex-col sm:flex-row sm:items-end justify-between gap-4">
             <div>
@@ -106,7 +139,6 @@ export default function TripDetailPage() {
                 <span className="flex items-center gap-1.5 bg-white/70 shadow-sm px-3 py-1.5 rounded-lg"><MapPin className="h-4 w-4 text-primary" />{activeTrip.stops.length} stops</span>
               </div>
             </div>
-            
             <div className="flex items-center gap-3">
               <ShareButton tripId={activeTrip.id} isPublic={activeTrip.is_public} shareCode={activeTrip.share_code} />
               <Link to={`/trips/${activeTrip.id}/edit`} className="flex items-center justify-center p-3 rounded-xl bg-white shadow-sm hover:shadow-md transition-all text-text-primary hover:text-primary">
@@ -121,9 +153,8 @@ export default function TripDetailPage() {
       </div>
 
       <div className="max-w-5xl mx-auto px-4 py-8">
-        
         {/* Quick Tools */}
-        <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 mb-10">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-10">
           <Link to={`/trips/${activeTrip.id}/builder`} className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-primary text-white hover:bg-primary-dark transition-all shadow-lg shadow-primary/20">
             <Route className="h-6 w-6" />
             <span className="text-sm font-medium text-center">Builder</span>
@@ -131,10 +162,6 @@ export default function TripDetailPage() {
           <Link to={`/trips/${activeTrip.id}/itinerary`} className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-surface-card border border-surface-border hover:shadow-ambient transition-all text-text-primary group">
             <MapPin className="h-6 w-6 text-accent group-hover:scale-110 transition-transform" />
             <span className="text-sm font-medium text-center">Map View</span>
-          </Link>
-          <Link to={`/trips/${activeTrip.id}/budget`} className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-surface-card border border-surface-border hover:shadow-ambient transition-all text-text-primary group">
-            <DollarSign className="h-6 w-6 text-success group-hover:scale-110 transition-transform" />
-            <span className="text-sm font-medium text-center">Budget</span>
           </Link>
           <Link to={`/trips/${activeTrip.id}/notes`} className="flex flex-col items-center justify-center gap-2 p-4 rounded-2xl bg-surface-card border border-surface-border hover:shadow-ambient transition-all text-text-primary group">
             <FileText className="h-6 w-6 text-primary group-hover:scale-110 transition-transform" />
@@ -147,9 +174,8 @@ export default function TripDetailPage() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
-            {/* Main Content Area - Itinerary Timeline */}
+            {/* Main Content Area */}
             <div className="lg:col-span-2 space-y-10">
-                
                 <div>
                     <div className="flex items-center justify-between mb-8">
                         <h2 className="text-2xl font-display font-bold text-text-primary">Itinerary</h2>
@@ -169,9 +195,8 @@ export default function TripDetailPage() {
                         </div>
                     ) : (
                         <div className="relative pl-4 sm:pl-8 border-l-2 border-surface-border space-y-8">
-                            {activeTrip.stops.map((stop, index) => (
+                            {activeTrip.stops.map((stop) => (
                                 <div key={stop.id} className="relative">
-                                    {/* Timeline Node */}
                                     <div className="absolute -left-[21px] sm:-left-[37px] top-6 w-4 h-4 rounded-full bg-accent border-[3px] border-surface shadow-sm"></div>
                                     <StopCard stop={stop} onDelete={handleDeleteStop} />
                                 </div>
@@ -180,7 +205,7 @@ export default function TripDetailPage() {
                     )}
                 </div>
 
-                {/* Horizontal Activities Scroll */}
+                {/* Suggested Activities */}
                 {visibleSuggestions.length > 0 && (
                   <div>
                       <h2 className="text-2xl font-display font-bold text-text-primary mb-6">Suggested Activities</h2>
@@ -217,28 +242,111 @@ export default function TripDetailPage() {
                       </div>
                   </div>
                 )}
-
             </div>
 
-            {/* Sticky Sidebar */}
+            {/* Sticky Sidebar — Inline Budget */}
             <div className="space-y-6">
                 <div className="sticky top-24">
-                    <div className="bg-surface-card border border-surface-border rounded-2xl p-6 shadow-ambient">
-                        <h3 className="text-lg font-display font-bold text-text-primary mb-6">Budget Overview</h3>
-                        
-                        <div className="space-y-4">
-                            <div className="flex justify-between items-center text-sm">
-                                <span className="text-text-secondary">Total Budget</span>
-                                <span className="font-bold text-text-primary text-xl">${totalBudget.toLocaleString()}</span>
+                    <div className="bg-surface-card border border-surface-border rounded-2xl shadow-ambient overflow-hidden">
+                        <div className="p-6">
+                          <div className="flex items-center justify-between mb-4">
+                            <h3 className="text-lg font-display font-bold text-text-primary">Trip Budget</h3>
+                            <button
+                              onClick={() => setShowBudgetModal(true)}
+                              className="p-2 rounded-lg bg-primary/10 text-primary hover:bg-primary/20 transition-colors"
+                              title="Add expense"
+                            >
+                              <Plus className="h-4 w-4" />
+                            </button>
+                          </div>
+                          
+                          {budgetLoading && !budget ? (
+                            <div className="flex items-center justify-center py-6">
+                              <Loader2 className="h-5 w-5 text-primary animate-spin" />
                             </div>
-                            <div className="w-full h-2.5 bg-surface-dim rounded-full mt-3 overflow-hidden">
-                                <div className="h-full bg-accent rounded-full shadow-sm" style={{ width: totalBudget > 0 ? '100%' : '0%' }}></div>
-                            </div>
+                          ) : (
+                            <>
+                              <div className="flex justify-between items-center text-sm mb-3">
+                                <span className="text-text-secondary">Total</span>
+                                <span className="font-bold text-text-primary text-2xl">${totalBudget.toLocaleString()}</span>
+                              </div>
+                              {budget && budget.cost_per_day && (
+                                <p className="text-xs text-text-muted mb-4">
+                                  ~${parseFloat(budget.cost_per_day).toFixed(0)}/day · {budget.trip_duration_days} days
+                                </p>
+                              )}
+
+                              {/* Category breakdown pills */}
+                              {budget && budget.category_breakdown.length > 0 && (
+                                <div className="flex flex-wrap gap-1.5 mb-4">
+                                  {budget.category_breakdown.map(cat => (
+                                    <span key={cat.category} className="text-[10px] font-bold uppercase tracking-wider px-2 py-1 rounded-full bg-primary/5 text-primary/70">
+                                      {cat.category} ${parseFloat(cat.total_cost).toFixed(0)}
+                                    </span>
+                                  ))}
+                                </div>
+                              )}
+
+                              <button
+                                onClick={() => setShowBudgetDetails(!showBudgetDetails)}
+                                className="w-full text-center text-xs font-bold text-primary hover:text-primary-dark transition-colors py-2"
+                              >
+                                {showBudgetDetails ? "Hide Details ▲" : "Show Details ▼"}
+                              </button>
+                            </>
+                          )}
                         </div>
 
-                        <Link to={`/trips/${activeTrip.id}/budget`} className="mt-8 w-full flex items-center justify-center gap-2 py-3 rounded-xl bg-primary/5 text-primary font-medium hover:bg-primary/10 transition-colors">
-                            View Full Budget
-                        </Link>
+                        {/* Expandable detail section */}
+                        {showBudgetDetails && budget && (
+                          <div className="border-t border-surface-border max-h-[400px] overflow-y-auto">
+                            {/* Manual Items */}
+                            <div className="px-4 py-3">
+                              <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted mb-2">Manual Expenses</p>
+                              {budget.manual_items.length === 0 ? (
+                                <p className="text-xs text-text-muted py-3 text-center">No expenses yet. Click + to add.</p>
+                              ) : (
+                                <div className="space-y-2">
+                                  {budget.manual_items.map(item => (
+                                    <div key={item.id} className="flex items-center justify-between py-1.5 group/item">
+                                      <div className="flex items-center gap-2 min-w-0">
+                                        <DollarSign className="h-3 w-3 text-primary shrink-0" />
+                                        <div className="min-w-0">
+                                          <p className="text-xs font-medium text-text-primary truncate">{item.title}</p>
+                                          <p className="text-[10px] text-text-muted">{item.category}</p>
+                                        </div>
+                                      </div>
+                                      <div className="flex items-center gap-1 shrink-0">
+                                        <span className="text-xs font-bold text-text-primary">${parseFloat(item.amount).toLocaleString()}</span>
+                                        <button onClick={() => handleEditBudgetItem(item)} className="p-1 rounded text-primary opacity-0 group-hover/item:opacity-100 hover:bg-primary/5 transition-all">
+                                          <Edit className="h-3 w-3" />
+                                        </button>
+                                        <button onClick={() => handleDeleteBudgetItem(item.id)} className="p-1 rounded text-danger opacity-0 group-hover/item:opacity-100 hover:bg-danger/5 transition-all">
+                                          <Trash2 className="h-3 w-3" />
+                                        </button>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+
+                            {/* Activity costs by stop */}
+                            {budget.stop_breakdown.length > 0 && (
+                              <div className="px-4 py-3 border-t border-surface-border">
+                                <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted mb-2">Activity Costs by City</p>
+                                <div className="space-y-1.5">
+                                  {budget.stop_breakdown.filter(s => s.activity_count > 0).map(s => (
+                                    <div key={s.stop_id} className="flex items-center justify-between text-xs">
+                                      <span className="text-text-secondary">{s.city_name} <span className="text-text-muted">({s.activity_count})</span></span>
+                                      <span className="font-bold text-text-primary">${parseFloat(s.total_cost).toFixed(0)}</span>
+                                    </div>
+                                  ))}
+                                </div>
+                              </div>
+                            )}
+                          </div>
+                        )}
                     </div>
 
                     <div className="mt-6 bg-primary/5 border border-primary/10 rounded-2xl p-6 text-center shadow-sm">
@@ -257,12 +365,19 @@ export default function TripDetailPage() {
           <AddToTripModal 
             activity={activityToAddToTrip} 
             isOpen={!!activityToAddToTrip} 
-            onClose={() => setActivityToAddToTrip(null)} 
+            onClose={() => { setActivityToAddToTrip(null); handleActivityAdded(); }} 
           />
         )}
+
+        <AddBudgetItemModal
+          tripId={id || ""}
+          isOpen={showBudgetModal}
+          onClose={closeBudgetModal}
+          onSuccess={fetchBudget}
+          itemToEdit={budgetItemToEdit}
+        />
 
       </div>
     </div>
   );
 }
-

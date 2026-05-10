@@ -52,12 +52,17 @@ class TripService:
     async def get_trip(
         self, trip_id: uuid.UUID, user_id: uuid.UUID
     ) -> Trip | None:
-        """Fetch a trip by ID with stops + city info. Returns None if not found/not owned."""
+        """Fetch a trip by ID with stops + city info + stop_activities. Returns None if not found/not owned."""
+        from app.models.stop_activity import StopActivity
+
         q = (
             select(Trip)
             .where(Trip.id == trip_id, Trip.user_id == user_id)
             .options(
-                selectinload(Trip.stops).selectinload(Stop.city)
+                selectinload(Trip.stops).selectinload(Stop.city),
+                selectinload(Trip.stops)
+                .selectinload(Stop.stop_activities)
+                .selectinload(StopActivity.activity),
             )
         )
         result = await self.db.execute(q)

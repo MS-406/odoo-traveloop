@@ -1,4 +1,5 @@
 // frontend/src/components/budget/AddBudgetItemModal.tsx
+import { useState, useEffect } from "react";
 import { X, Loader2, Plus, Save } from "lucide-react";
 import { budgetApi, type BudgetItem } from "@/api/budget";
 import toast from "react-hot-toast";

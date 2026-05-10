@@ -49,6 +49,31 @@ class CityBrief(BaseModel):
     image_url: str | None = None
 
 
+# ── Activity brief (nested inside StopActivityRead) ──────────────────
+class ActivityBrief(BaseModel):
+    """Minimal activity info embedded in stop activity responses."""
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    name: str
+    type: str
+    cost: str
+    duration_min: int | None = None
+    image_url: str | None = None
+
+
+class StopActivityRead(BaseModel):
+    """StopActivity representation with nested activity."""
+    model_config = ConfigDict(from_attributes=True)
+
+    id: uuid.UUID
+    stop_id: uuid.UUID
+    activity_id: uuid.UUID
+    scheduled_time: str | None = None
+    custom_note: str | None = None
+    activity: ActivityBrief | None = None
+
+
 # ── Stop read (nested inside TripRead) ───────────────────────────────
 class StopRead(BaseModel):
     """Stop representation returned inside trip detail responses."""
@@ -62,6 +87,7 @@ class StopRead(BaseModel):
     end_date: date
     position_order: int
     created_at: datetime
+    stop_activities: list[StopActivityRead] = []
 
 
 class TripRead(BaseModel):

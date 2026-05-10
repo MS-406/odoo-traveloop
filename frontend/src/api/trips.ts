@@ -30,6 +30,24 @@ export interface CityBrief {
   image_url: string | null;
 }
 
+export interface ActivityBrief {
+  id: string;
+  name: string;
+  type: string;
+  cost: string;
+  duration_min: number | null;
+  image_url: string | null;
+}
+
+export interface StopActivityItem {
+  id: string;
+  stop_id: string;
+  activity_id: string;
+  scheduled_time: string | null;
+  custom_note: string | null;
+  activity: ActivityBrief | null;
+}
+
 export interface Stop {
   id: string;
   trip_id: string;
@@ -39,6 +57,7 @@ export interface Stop {
   end_date: string;
   position_order: number;
   created_at: string;
+  stop_activities: StopActivityItem[];
 }
 
 export interface Trip {
