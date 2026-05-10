@@ -75,6 +75,11 @@ class TripService:
         is_public: bool = False,
     ) -> Trip:
         """Create a new trip. Auto-generates share_code if public."""
+        if not cover_photo:
+            import urllib.parse
+            query = urllib.parse.quote(f"travel,{name}")
+            cover_photo = f"https://loremflickr.com/1200/400/{query}/all"
+
         share_code = self._generate_share_code() if is_public else None
         trip = Trip(
             user_id=user_id,

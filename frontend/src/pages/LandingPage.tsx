@@ -106,6 +106,48 @@ export default function LandingPage() {
         </div>
       </section>
 
+      {/* Explore by Region */}
+      <section className="py-24 relative overflow-hidden bg-surface-card/30">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div className="text-center max-w-3xl mx-auto mb-16">
+            <h2 className="text-3xl md:text-4xl font-display font-bold text-text-primary mb-4">Explore by Region</h2>
+            <p className="text-lg text-text-secondary">Discover your next adventure across the globe.</p>
+          </div>
+
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 sm:gap-6">
+            {[
+              { name: "Europe", img: "https://loremflickr.com/600/400/europe,city,architecture/all" },
+              { name: "Asia", img: "https://loremflickr.com/600/400/asia,temple,nature/all" },
+              { name: "Africa", img: "https://loremflickr.com/600/400/africa,safari,landscape/all" },
+              { name: "Middle East", img: "https://loremflickr.com/600/400/middleeast,desert,city/all" },
+              { name: "North America", img: "https://loremflickr.com/600/400/northamerica,city,nature/all" },
+              { name: "South America", img: "https://loremflickr.com/600/400/southamerica,mountains,city/all" },
+              { name: "Oceania", img: "https://loremflickr.com/600/400/oceania,beach,ocean/all" },
+              { name: "Antarctica", img: "https://loremflickr.com/600/400/antarctica,ice,penguin/all" },
+            ].map((region) => (
+              <Link 
+                key={region.name}
+                to={`/cities?region=${encodeURIComponent(region.name)}`}
+                className="group relative h-48 sm:h-64 rounded-2xl overflow-hidden shadow-sm hover:shadow-ambient transition-all duration-500 hover:-translate-y-1"
+              >
+                <img 
+                  src={region.img} 
+                  alt={region.name}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-110"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent opacity-60 group-hover:opacity-80 transition-opacity" />
+                <div className="absolute bottom-0 left-0 p-4 sm:p-6 w-full">
+                  <h3 className="text-white font-display font-bold text-lg sm:text-xl transform transition-transform duration-500 group-hover:translate-x-1">
+                    {region.name}
+                  </h3>
+                  <div className="h-0.5 w-0 group-hover:w-12 bg-accent transition-all duration-500 mt-1" />
+                </div>
+              </Link>
+            ))}
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section className="py-24 relative overflow-hidden">
         <div className="absolute inset-0 bg-primary"></div>
