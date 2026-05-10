@@ -12,6 +12,8 @@ import {
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip } from "recharts";
 import toast from "react-hot-toast";
 import { aiOptimizerApi, OptimizationResult, OptimizeRequest } from "@/api/aiOptimizer";
+import { useTripStore } from "@/stores/tripStore";
+import { citiesApi } from "@/api/cities";
 
 type FormData = {
   starting_city: string;
@@ -49,8 +51,10 @@ export default function AiTripOptimizerPage() {
   const [result, setResult] = useState<OptimizationResult | null>(null);
   const [loadingMsg, setLoadingMsg] = useState(0);
   const [errorMsg, setErrorMsg] = useState("");
+  const [isAddingToTrips, setIsAddingToTrips] = useState(false);
+  const { createTrip, addStop } = useTripStore();
 
-  const { register, handleSubmit, formState: { errors } } = useForm<FormData>({
+  const { register, handleSubmit, getValues, formState: { errors } } = useForm<FormData>({
     defaultValues: {
       travelers: 1,
       budget_usd: 2000,
@@ -116,11 +120,64 @@ export default function AiTripOptimizerPage() {
     }
   };
 
-  const handleAddToTrips = () => {
+  const handleAddToTrips = async () => {
     if (!result) return;
-    const cities = result.optimized_route.map((r) => r.city).join(" → ");
-    const name = `AI Optimized: ${cities}`;
-    navigate(`/trips/new?name=${encodeURIComponent(name)}`);
+    setIsAddingToTrips(true);
+    const toastId = toast.loading("Creating your optimized trip...");
+
+    try {
+      const data = getValues();
+      const cities = result.optimized_route.map((r) => r.city).join(" → ");
+      const name = `AI Optimized: ${cities}`;
+
+      const trip = await createTrip({
+        name,
+        description: result.optimization_summary,
+        start_date: data.start_date,
+        end_date: data.end_date,
+        is_public: false,
+      });
+
+      let currentStartDate = new Date(data.start_date);
+
+      for (const routeStop of result.optimized_route) {
+        let cityId = "";
+        try {
+          const { data: cityData } = await citiesApi.search({ q: routeStop.city, country: routeStop.country, limit: 1 });
+          if (cityData.items.length > 0) {
+            cityId = cityData.items[0].id;
+          } else {
+            const { data: fallbackData } = await citiesApi.search({ q: routeStop.city, limit: 1 });
+            if (fallbackData.items.length > 0) {
+              cityId = fallbackData.items[0].id;
+            }
+          }
+        } catch (e) {
+          console.error("Failed to find city", routeStop.city);
+        }
+
+        if (cityId) {
+          const stopEndDate = new Date(currentStartDate);
+          stopEndDate.setDate(stopEndDate.getDate() + Math.max(1, routeStop.days_recommended) - 1);
+          
+          await addStop(trip.id, {
+             city_id: cityId,
+             start_date: currentStartDate.toISOString().split('T')[0],
+             end_date: stopEndDate.toISOString().split('T')[0],
+          });
+
+          currentStartDate = new Date(stopEndDate);
+          currentStartDate.setDate(currentStartDate.getDate() + 1);
+        }
+      }
+
+      toast.success("Trip created successfully!", { id: toastId });
+      navigate(`/trips/${trip.id}`);
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || "Failed to create trip.", { id: toastId });
+    } finally {
+      setIsAddingToTrips(false);
+    }
   };
 
   const budgetData = result
@@ -395,9 +452,10 @@ export default function AiTripOptimizerPage() {
                     </div>
                     <button
                       onClick={handleAddToTrips}
-                      className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium hover:shadow-lg transition flex items-center gap-1.5"
+                      disabled={isAddingToTrips}
+                      className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium hover:shadow-lg transition flex items-center gap-1.5 disabled:opacity-70 disabled:cursor-not-allowed"
                     >
-                      <Plus className="h-4 w-4" /> Add to My Trips
+                      <Plus className="h-4 w-4" /> {isAddingToTrips ? "Adding..." : "Add to My Trips"}
                     </button>
                   </div>
                   <p className="text-sm text-text-secondary mt-3">{result.optimization_summary}</p>

@@ -44,7 +44,10 @@ traveloop/
 │   │   ├── routers/       # API route handlers
 │   │   ├── services/      # Business logic layer
 │   │   ├── utils/         # JWT, password hashing, helpers
-│   │   └── middleware/    # Auth, admin middleware
+│   │   ├── middleware/    # Auth, admin middleware
+│   │   ├── main.py        # FastAPI app entry point
+│   │   ├── database.py    # DB connection setup
+│   │   └── config.py      # App configuration
 │   ├── alembic/           # Database migrations
 │   └── seed.py            # Seed data script
 ├── frontend/              # React + Vite application
@@ -53,9 +56,9 @@ traveloop/
 │       ├── components/    # Reusable UI components
 │       ├── pages/         # Route-level page components
 │       ├── stores/        # Zustand state stores
-│       ├── hooks/         # Custom React hooks
-│       ├── types/         # TypeScript type definitions
-│       └── utils/         # Formatters, validators, constants
+│       ├── utils/         # Formatters, validators, constants
+│       ├── App.tsx        # Main React component
+│       └── main.tsx       # React entry point
 └── .github/               # PR templates, CI config
 ```
 
