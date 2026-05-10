@@ -10,6 +10,8 @@ import { MapPin, Calendar, Search, X } from "lucide-react";
 import { citiesApi, type City } from "@/api/cities";
 import toast from "react-hot-toast";
 
+type SelectableCity = Pick<City, "id" | "name" | "country" | "region">;
+
 const stopSchema = z.object({
   city_id: z.string().min(1, "Please select a city"),
   start_date: z.string().min(1, "Start date is required"),
@@ -25,18 +27,27 @@ interface StopFormProps {
   onSubmit: (data: StopFormValues) => Promise<void>;
   onClose: () => void;
   isLoading?: boolean;
+  initialCity?: SelectableCity | null;
 }
 
-export default function StopForm({ onSubmit, onClose, isLoading }: StopFormProps) {
+export default function StopForm({ onSubmit, onClose, isLoading, initialCity }: StopFormProps) {
   const [citySearch, setCitySearch] = useState("");
   const [cities, setCities] = useState<City[]>([]);
-  const [selectedCity, setSelectedCity] = useState<City | null>(null);
+  const [selectedCity, setSelectedCity] = useState<SelectableCity | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<StopFormValues>({
     resolver: zodResolver(stopSchema),
     defaultValues: { city_id: "", start_date: "", end_date: "" },
   });
+
+  useEffect(() => {
+    if (!initialCity) return;
+    setSelectedCity(initialCity);
+    setValue("city_id", initialCity.id);
+    setCitySearch(`${initialCity.name}, ${initialCity.country}`);
+    setShowDropdown(false);
+  }, [initialCity, setValue]);
 
   // Debounced city search
   useEffect(() => {

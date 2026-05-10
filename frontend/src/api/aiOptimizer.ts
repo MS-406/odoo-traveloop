@@ -53,9 +53,29 @@ export interface OptimizationResult {
   alternative_suggestion: string;
 }
 
+export interface InsightCitySuggestion {
+  id: string;
+  name: string;
+  country: string;
+  region: string | null;
+  image_url: string | null;
+  reason: string;
+}
+
+export interface TripInsightsResult {
+  summary: string;
+  highlights: string[];
+  warnings: string[];
+  next_steps: string[];
+  suggested_cities: InsightCitySuggestion[];
+}
+
 // ── API Functions ─────────────────────────────────────────────────
 
 export const aiOptimizerApi = {
   optimize: (data: OptimizeRequest) =>
     api.post<OptimizationResult>("/ai/optimize-trip", data),
+
+  getTripInsights: (tripId: string) =>
+    api.get<TripInsightsResult>(`/ai/trips/${tripId}/insights`),
 };

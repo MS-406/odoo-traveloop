@@ -3,6 +3,7 @@
 # Depends on: Phase 4 / budget_service.py
 
 from decimal import Decimal
+from uuid import UUID
 
 from pydantic import BaseModel
 
@@ -33,8 +34,8 @@ class BudgetItemCreate(BudgetItemBase):
     pass
 
 class BudgetItemResponse(BudgetItemBase):
-    id: str
-    trip_id: str
+    id: UUID
+    trip_id: UUID
 
     class Config:
         from_attributes = True

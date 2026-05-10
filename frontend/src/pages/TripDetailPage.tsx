@@ -3,12 +3,14 @@
 
 import { useState, useEffect, useCallback } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Calendar, Edit, MapPin, Plus, Route, Trash2, DollarSign, FileText, ListChecks, Globe, X, Loader2 } from "lucide-react";
+import { ArrowLeft, Calendar, Edit, MapPin, Plus, Route, Trash2, DollarSign, FileText, ListChecks, Globe, X, Loader2, Sparkles, AlertTriangle, Lightbulb } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useTripStore } from "@/stores/tripStore";
 import { activitiesApi, type Activity } from "@/api/activities";
+import { aiOptimizerApi, type InsightCitySuggestion, type TripInsightsResult } from "@/api/aiOptimizer";
 import { budgetApi, type BudgetSummary, type BudgetItem } from "@/api/budget";
 import StopCard from "@/components/trips/StopCard";
+import StopForm from "@/components/trips/StopForm";
 import ShareButton from "@/components/trips/ShareButton";
 import AddToTripModal from "@/components/trips/AddToTripModal";
 import AddBudgetItemModal from "@/components/budget/AddBudgetItemModal";
@@ -18,10 +20,15 @@ import toast from "react-hot-toast";
 export default function TripDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const { activeTrip, isTripLoading, fetchTrip, deleteTrip, deleteStop } = useTripStore();
+  const { activeTrip, isTripLoading, fetchTrip, deleteTrip, addStop, deleteStop } = useTripStore();
   const [suggestedActivities, setSuggestedActivities] = useState<Activity[]>([]);
   const [removedSuggestionIds, setRemovedSuggestionIds] = useState<Set<string>>(new Set());
   const [activityToAddToTrip, setActivityToAddToTrip] = useState<Activity | null>(null);
+  const [showStopForm, setShowStopForm] = useState(false);
+  const [isAddingStop, setIsAddingStop] = useState(false);
+  const [prefillCity, setPrefillCity] = useState<InsightCitySuggestion | null>(null);
+  const [insights, setInsights] = useState<TripInsightsResult | null>(null);
+  const [insightsLoading, setInsightsLoading] = useState(false);
 
   // Budget state
   const [budget, setBudget] = useState<BudgetSummary | null>(null);
@@ -31,6 +38,22 @@ export default function TripDetailPage() {
   const [showBudgetDetails, setShowBudgetDetails] = useState(false);
 
   useEffect(() => { if (id) fetchTrip(id); }, [id, fetchTrip]);
+
+  const fetchInsights = useCallback(async () => {
+    if (!id) return;
+    setInsightsLoading(true);
+    try {
+      const { data } = await aiOptimizerApi.getTripInsights(id);
+      setInsights(data);
+    } catch (err) {
+      console.error("Failed to load AI insights", err);
+      setInsights(null);
+    } finally {
+      setInsightsLoading(false);
+    }
+  }, [id]);
+
+  useEffect(() => { fetchInsights(); }, [fetchInsights, activeTrip?.updated_at, activeTrip?.stops.length]);
 
   const fetchBudget = useCallback(async () => {
     if (!id) return;
@@ -77,6 +100,28 @@ export default function TripDetailPage() {
     if (!confirm("Remove this stop?")) return;
     try { await deleteStop(stopId); toast.success("Stop removed"); fetchBudget(); }
     catch { toast.error("Failed to remove stop"); }
+  };
+
+  const openStopForm = (city: InsightCitySuggestion | null = null) => {
+    setPrefillCity(city);
+    setShowStopForm(true);
+  };
+
+  const handleAddStop = async (data: { city_id: string; start_date: string; end_date: string }) => {
+    if (!id) return;
+    setIsAddingStop(true);
+    try {
+      await addStop(id, data);
+      toast.success("City added to trip!");
+      setShowStopForm(false);
+      setPrefillCity(null);
+      fetchBudget();
+      fetchInsights();
+    } catch (err: any) {
+      toast.error(err?.response?.data?.detail || "Failed to add city");
+    } finally {
+      setIsAddingStop(false);
+    }
   };
 
   const removeSuggestion = (activityId: string) => {
@@ -180,7 +225,14 @@ export default function TripDetailPage() {
                 <div>
                     <div className="flex items-center justify-between mb-8">
                         <h2 className="text-2xl font-display font-bold text-text-primary">Itinerary</h2>
-                        <Link to={`/trips/${activeTrip.id}/builder`} className="text-sm font-medium text-primary hover:text-primary-dark flex items-center gap-1"><Plus className="h-4 w-4"/> Add Stop</Link>
+                        <div className="flex items-center gap-2">
+                          <button onClick={() => openStopForm()} className="text-sm font-medium text-primary hover:text-primary-dark flex items-center gap-1">
+                            <Plus className="h-4 w-4"/> Add City
+                          </button>
+                          <Link to={`/trips/${activeTrip.id}/builder`} className="text-xs font-bold text-text-muted hover:text-primary transition-colors">
+                            Reorder
+                          </Link>
+                        </div>
                     </div>
 
                     {activeTrip.stops.length === 0 ? (
@@ -190,9 +242,9 @@ export default function TripDetailPage() {
                         </div>
                         <h3 className="text-xl font-display font-semibold text-text-primary mb-2">No stops added yet</h3>
                         <p className="text-text-secondary mb-6">Start building your perfect itinerary.</p>
-                        <Link to={`/trips/${activeTrip.id}/builder`} className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-white font-medium hover:bg-primary-dark transition-all">
+                        <button onClick={() => openStopForm()} className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-primary text-white font-medium hover:bg-primary-dark transition-all">
                             <Plus className="h-4 w-4" /> Add First Stop
-                        </Link>
+                        </button>
                         </div>
                     ) : (
                         <div className="relative pl-4 sm:pl-8 border-l-2 border-surface-border space-y-8">
@@ -248,6 +300,92 @@ export default function TripDetailPage() {
             {/* Sticky Sidebar — Inline Budget */}
             <div className="space-y-6">
                 <div className="sticky top-24">
+                    <div className="bg-surface-card border border-primary/15 rounded-2xl shadow-ambient overflow-hidden mb-6">
+                      <div className="p-5 bg-primary/5 border-b border-primary/10">
+                        <div className="flex items-center justify-between gap-3">
+                          <div className="flex items-center gap-2">
+                            <Sparkles className="h-5 w-5 text-primary" />
+                            <h3 className="text-lg font-display font-bold text-text-primary">AI Insights</h3>
+                          </div>
+                          <button
+                            onClick={fetchInsights}
+                            className="text-xs font-bold text-primary hover:text-primary-dark transition-colors"
+                          >
+                            Refresh
+                          </button>
+                        </div>
+                        <p className="text-sm text-text-secondary mt-2">
+                          {insightsLoading ? "Reading your route..." : insights?.summary || "Insights will appear after your trip loads."}
+                        </p>
+                      </div>
+
+                      {insights && (
+                        <div className="p-5 space-y-4">
+                          {insights.highlights.length > 0 && (
+                            <div className="space-y-2">
+                              {insights.highlights.map((item) => (
+                                <div key={item} className="flex items-start gap-2 text-sm text-text-secondary">
+                                  <Lightbulb className="h-4 w-4 text-accent mt-0.5 shrink-0" />
+                                  <span>{item}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {insights.warnings.length > 0 && (
+                            <div className="rounded-xl bg-danger/5 border border-danger/10 p-3 space-y-2">
+                              {insights.warnings.map((item) => (
+                                <div key={item} className="flex items-start gap-2 text-xs text-danger">
+                                  <AlertTriangle className="h-3.5 w-3.5 mt-0.5 shrink-0" />
+                                  <span>{item}</span>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+
+                          {insights.next_steps.length > 0 && (
+                            <div className="space-y-1.5">
+                              <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted">Next Best Move</p>
+                              {insights.next_steps.map((item) => (
+                                <p key={item} className="text-xs text-text-secondary">{item}</p>
+                              ))}
+                            </div>
+                          )}
+
+                          {insights.suggested_cities.length > 0 && (
+                            <div className="space-y-2">
+                              <p className="text-[10px] font-bold uppercase tracking-wider text-text-muted">Suggested Cities</p>
+                              {insights.suggested_cities.map((city) => (
+                                <div key={city.id} className="flex items-center gap-3 rounded-xl border border-surface-border bg-white/60 p-2.5">
+                                  <div className="h-10 w-10 rounded-lg overflow-hidden bg-surface-dim shrink-0">
+                                    {city.image_url ? (
+                                      <img src={city.image_url} alt={city.name} className="h-full w-full object-cover" />
+                                    ) : (
+                                      <div className="h-full w-full flex items-center justify-center">
+                                        <MapPin className="h-4 w-4 text-text-muted" />
+                                      </div>
+                                    )}
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <p className="text-sm font-bold text-text-primary truncate">{city.name}</p>
+                                    <p className="text-[11px] text-text-muted truncate">{city.country}</p>
+                                    <p className="text-[11px] text-text-secondary line-clamp-2">{city.reason}</p>
+                                  </div>
+                                  <button
+                                    onClick={() => openStopForm(city)}
+                                    className="p-2 rounded-lg bg-primary text-white hover:bg-primary-dark transition-colors"
+                                    title={`Add ${city.name}`}
+                                  >
+                                    <Plus className="h-4 w-4" />
+                                  </button>
+                                </div>
+                              ))}
+                            </div>
+                          )}
+                        </div>
+                      )}
+                    </div>
+
                     <div className="bg-surface-card border border-surface-border rounded-2xl shadow-ambient overflow-hidden">
                         <div className="p-6">
                           <div className="flex items-center justify-between mb-4">
@@ -352,11 +490,16 @@ export default function TripDetailPage() {
 
                     <div className="mt-6 bg-primary/5 border border-primary/10 rounded-2xl p-6 text-center shadow-sm">
                         <Globe className="h-8 w-8 text-primary mx-auto mb-3" />
-                        <h4 className="font-display font-bold text-primary mb-2">Ready to explore?</h4>
-                        <p className="text-sm text-text-secondary mb-4">Discover more cities to add to your itinerary.</p>
-                        <Link to="/cities" className="inline-flex items-center text-sm font-bold text-primary hover:text-primary-dark transition-colors">
-                            Browse Destinations →
-                        </Link>
+                        <h4 className="font-display font-bold text-primary mb-2">Add another city</h4>
+                        <p className="text-sm text-text-secondary mb-4">Search and add a destination directly to this trip.</p>
+                        <div className="flex items-center justify-center gap-3">
+                          <button onClick={() => openStopForm()} className="inline-flex items-center gap-1.5 px-4 py-2 rounded-lg bg-primary text-white text-sm font-bold hover:bg-primary-dark transition-colors">
+                              <Plus className="h-4 w-4" /> Add City
+                          </button>
+                          <Link to="/cities" className="inline-flex items-center text-sm font-bold text-primary hover:text-primary-dark transition-colors">
+                              Browse
+                          </Link>
+                        </div>
                     </div>
 
                     {/* Mini Map Preview */}
@@ -374,6 +517,15 @@ export default function TripDetailPage() {
             activity={activityToAddToTrip} 
             isOpen={!!activityToAddToTrip} 
             onClose={() => { setActivityToAddToTrip(null); handleActivityAdded(); }} 
+          />
+        )}
+
+        {showStopForm && (
+          <StopForm
+            onSubmit={handleAddStop}
+            onClose={() => { setShowStopForm(false); setPrefillCity(null); }}
+            isLoading={isAddingStop}
+            initialCity={prefillCity}
           />
         )}
 
