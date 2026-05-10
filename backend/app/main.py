@@ -50,6 +50,9 @@ from app.routers.stops import router as stops_router  # noqa: E402 — Phase 3
 from app.routers.cities import router as cities_router  # noqa: E402 — Phase 4
 from app.routers.activities import router as activities_router  # noqa: E402 — Phase 4
 from app.routers.budget import router as budget_router  # noqa: E402 — Phase 4
+from app.routers.notes import router as notes_router  # noqa: E402 — Phase 5
+from app.routers.checklist import router as checklist_router  # noqa: E402 — Phase 5
+from app.routers.admin import router as admin_router  # noqa: E402 — Phase 6
 
 app.include_router(auth_router)
 app.include_router(trips_router)
@@ -57,5 +60,8 @@ app.include_router(stops_router)
 app.include_router(cities_router)
 app.include_router(activities_router)
 app.include_router(budget_router)
+app.include_router(notes_router)
+app.include_router(checklist_router)
+app.include_router(admin_router)
 
 # SELF-CHECK: dynamic data only ✓ | validated ✓ | paginated N/A | error handled ✓

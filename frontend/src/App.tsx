@@ -1,5 +1,5 @@
 // frontend/src/App.tsx
-// Root component — React Router setup with Phase 2 auth + Phase 3 trip + Phase 4 discovery routes.
+// Root component — full routing for Phase 2–6.
 
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { Toaster } from "react-hot-toast";
@@ -20,19 +20,46 @@ import TripDetailPage from "@/pages/TripDetailPage";
 import ItineraryBuilderPage from "@/pages/ItineraryBuilderPage";
 import ItineraryViewPage from "@/pages/ItineraryViewPage";
 
-// Discovery & Budget pages (Phase 4)
+// Discovery & Budget (Phase 4)
 import CitySearchPage from "@/pages/CitySearchPage";
 import ActivitySearchPage from "@/pages/ActivitySearchPage";
 import BudgetPage from "@/pages/BudgetPage";
 
+// Notes & Checklist (Phase 5)
+import NotesPage from "@/pages/NotesPage";
+import ChecklistPage from "@/pages/ChecklistPage";
+
+// Settings & Admin (Phase 6)
+import SettingsPage from "@/pages/SettingsPage";
+import AdminPage from "@/pages/AdminPage";
+
 // Layout
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
+import Navbar from "@/components/layout/Navbar";
+
+// Layout wrapper that adds Navbar to protected pages
+function AppLayout({ children }: { children: React.ReactNode }) {
+  return (
+    <>
+      <Navbar />
+      {children}
+    </>
+  );
+}
+
+// Protected route wrapped with AppLayout
+function ProtectedPage({ children }: { children: React.ReactNode }) {
+  return (
+    <ProtectedRoute>
+      <AppLayout>{children}</AppLayout>
+    </ProtectedRoute>
+  );
+}
 
 function App() {
   const { fetchUser } = useAuthStore();
 
   useEffect(() => {
-    // On app mount, try to restore session from stored token
     if (localStorage.getItem("access_token")) {
       fetchUser();
     }
@@ -40,44 +67,43 @@ function App() {
 
   return (
     <BrowserRouter>
-      {/* react-hot-toast: lightweight toast notifications positioned top-center */}
       <Toaster
         position="top-center"
         toastOptions={{
           duration: 4000,
-          style: {
-            borderRadius: "8px",
-            background: "#111827",
-            color: "#F9FAFB",
-            fontSize: "14px",
-          },
+          style: { borderRadius: "8px", background: "#111827", color: "#F9FAFB", fontSize: "14px" },
         }}
       />
 
       <Routes>
-        {/* ── Public auth routes ──────────────────────────────────── */}
+        {/* ── Public auth routes ────────────────────────────── */}
         <Route path="/login" element={<LoginPage />} />
         <Route path="/signup" element={<SignupPage />} />
         <Route path="/forgot-password" element={<ForgotPasswordPage />} />
 
-        {/* ── Protected routes — require authentication ───────────── */}
-        {/* Dashboard */}
-        <Route path="/dashboard" element={<ProtectedRoute><DashboardPage /></ProtectedRoute>} />
+        {/* ── Protected routes (with Navbar) ────────────────── */}
+        <Route path="/dashboard" element={<ProtectedPage><DashboardPage /></ProtectedPage>} />
 
         {/* Trip CRUD (Phase 3) */}
-        <Route path="/trips" element={<ProtectedRoute><MyTripsPage /></ProtectedRoute>} />
-        <Route path="/trips/new" element={<ProtectedRoute><CreateTripPage /></ProtectedRoute>} />
-        <Route path="/trips/:id" element={<ProtectedRoute><TripDetailPage /></ProtectedRoute>} />
-        <Route path="/trips/:id/edit" element={<ProtectedRoute><EditTripPage /></ProtectedRoute>} />
-        <Route path="/trips/:id/builder" element={<ProtectedRoute><ItineraryBuilderPage /></ProtectedRoute>} />
-        <Route path="/trips/:id/itinerary" element={<ProtectedRoute><ItineraryViewPage /></ProtectedRoute>} />
-        <Route path="/trips/:id/budget" element={<ProtectedRoute><BudgetPage /></ProtectedRoute>} />
+        <Route path="/trips" element={<ProtectedPage><MyTripsPage /></ProtectedPage>} />
+        <Route path="/trips/new" element={<ProtectedPage><CreateTripPage /></ProtectedPage>} />
+        <Route path="/trips/:id" element={<ProtectedPage><TripDetailPage /></ProtectedPage>} />
+        <Route path="/trips/:id/edit" element={<ProtectedPage><EditTripPage /></ProtectedPage>} />
+        <Route path="/trips/:id/builder" element={<ProtectedPage><ItineraryBuilderPage /></ProtectedPage>} />
+        <Route path="/trips/:id/itinerary" element={<ProtectedPage><ItineraryViewPage /></ProtectedPage>} />
+        <Route path="/trips/:id/budget" element={<ProtectedPage><BudgetPage /></ProtectedPage>} />
+        <Route path="/trips/:id/notes" element={<ProtectedPage><NotesPage /></ProtectedPage>} />
+        <Route path="/trips/:id/checklist" element={<ProtectedPage><ChecklistPage /></ProtectedPage>} />
 
-        {/* City & Activity discovery (Phase 4) — protected for now */}
-        <Route path="/cities" element={<ProtectedRoute><CitySearchPage /></ProtectedRoute>} />
-        <Route path="/activities" element={<ProtectedRoute><ActivitySearchPage /></ProtectedRoute>} />
+        {/* Discovery (Phase 4) */}
+        <Route path="/cities" element={<ProtectedPage><CitySearchPage /></ProtectedPage>} />
+        <Route path="/activities" element={<ProtectedPage><ActivitySearchPage /></ProtectedPage>} />
 
-        {/* ── Redirects ──────────────────────────────────────────── */}
+        {/* Settings & Admin (Phase 6) */}
+        <Route path="/settings" element={<ProtectedPage><SettingsPage /></ProtectedPage>} />
+        <Route path="/admin" element={<ProtectedPage><AdminPage /></ProtectedPage>} />
+
+        {/* ── Redirects ────────────────────────────────────── */}
         <Route path="/" element={<Navigate to="/dashboard" replace />} />
         <Route path="*" element={<Navigate to="/dashboard" replace />} />
       </Routes>

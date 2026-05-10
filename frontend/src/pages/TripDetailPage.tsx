@@ -4,7 +4,7 @@
 
 import { useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Calendar, Edit, MapPin, Plus, Route, Trash2, DollarSign } from "lucide-react";
+import { ArrowLeft, Calendar, Edit, MapPin, Plus, Route, Trash2, DollarSign, FileText, ListChecks } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useTripStore } from "@/stores/tripStore";
 import StopCard from "@/components/trips/StopCard";
@@ -65,6 +65,8 @@ export default function TripDetailPage() {
           <Link to={`/trips/${activeTrip.id}/builder`} className="flex items-center gap-2 px-4 py-2.5 rounded-lg bg-primary text-white text-sm font-medium hover:bg-primary-dark transition-all"><Route className="h-4 w-4" /> Itinerary Builder</Link>
           <Link to={`/trips/${activeTrip.id}/itinerary`} className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-surface-border text-sm font-medium text-text-secondary hover:bg-surface transition-colors"><MapPin className="h-4 w-4" /> View Itinerary</Link>
           <Link to={`/trips/${activeTrip.id}/budget`} className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-surface-border text-sm font-medium text-text-secondary hover:bg-surface transition-colors"><DollarSign className="h-4 w-4" /> Budget</Link>
+          <Link to={`/trips/${activeTrip.id}/notes`} className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-surface-border text-sm font-medium text-text-secondary hover:bg-surface transition-colors"><FileText className="h-4 w-4" /> Notes</Link>
+          <Link to={`/trips/${activeTrip.id}/checklist`} className="flex items-center gap-2 px-4 py-2.5 rounded-lg border border-surface-border text-sm font-medium text-text-secondary hover:bg-surface transition-colors"><ListChecks className="h-4 w-4" /> Checklist</Link>
         </div>
 
         <div>

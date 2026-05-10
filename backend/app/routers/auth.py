@@ -205,4 +205,30 @@ async def delete_me(
     _clear_refresh_cookie(response)
     return None
 
+
+# ── POST /auth/password ──────────────────────────────────────────────
+@router.post(
+    "/password",
+    status_code=status.HTTP_200_OK,
+    summary="Change password",
+    description="Change current user password. Requires current password verification.",
+)
+async def change_password(
+    body: dict,
+    user: User = Depends(get_current_user),
+    db: AsyncSession = Depends(get_db),
+):
+    from app.utils.password import verify_password, hash_password
+    current_pw = body.get("current_password", "")
+    new_pw = body.get("new_password", "")
+    if not current_pw or not new_pw:
+        raise HTTPException(status_code=400, detail="Both current and new passwords required")
+    if len(new_pw) < 8:
+        raise HTTPException(status_code=400, detail="New password must be at least 8 characters")
+    if not verify_password(current_pw, user.hashed_password):
+        raise HTTPException(status_code=400, detail="Current password is incorrect")
+    user.hashed_password = hash_password(new_pw)
+    await db.flush()
+    return {"message": "Password changed successfully"}
+
 # SELF-CHECK: dynamic data only ✓ | validated ✓ | paginated N/A | error handled ✓
