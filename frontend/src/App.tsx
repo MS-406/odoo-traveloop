@@ -40,6 +40,11 @@ import AdminPage from "@/pages/AdminPage";
 import PublicTripPage from "@/pages/PublicTripPage";
 import NotFoundPage from "@/pages/NotFoundPage";
 
+// New Features
+import AiTripOptimizerPage from "@/pages/AiTripOptimizerPage";
+import CollaborativeTripPage from "@/pages/CollaborativeTripPage";
+import CollaborativeTripWorkspace from "@/pages/CollaborativeTripWorkspace";
+
 // Layout
 import ProtectedRoute from "@/components/layout/ProtectedRoute";
 import Navbar from "@/components/layout/Navbar";
@@ -96,6 +101,11 @@ function App() {
         <Route path="/activities" element={<ProtectedPage><ActivitySearchPage /></ProtectedPage>} />
         <Route path="/settings" element={<ProtectedPage><SettingsPage /></ProtectedPage>} />
         <Route path="/admin" element={<ProtectedPage><AdminPage /></ProtectedPage>} />
+
+        {/* ── New Features ────────────────────────────────────── */}
+        <Route path="/ai-trip-optimizer" element={<ProtectedPage><AiTripOptimizerPage /></ProtectedPage>} />
+        <Route path="/collaborative-trip" element={<ProtectedPage><CollaborativeTripPage /></ProtectedPage>} />
+        <Route path="/collaborative-trip/:id" element={<ProtectedPage><CollaborativeTripWorkspace /></ProtectedPage>} />
 
         {/* ── 404 catch-all ─────────────────────────────────── */}
         <Route path="*" element={<NotFoundPage />} />

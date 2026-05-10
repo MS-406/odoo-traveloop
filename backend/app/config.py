@@ -2,6 +2,7 @@
 # Centralizes all environment configuration using Pydantic Settings.
 # Pydantic Settings chosen for type-safe env parsing + .env file support.
 
+from pydantic import field_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -24,6 +25,20 @@ class Settings(BaseSettings):
     # ── App ───────────────────────────────────────────────────────────────
     APP_NAME: str = "Traveloop"
     DEBUG: bool = True
+
+    @field_validator("DEBUG", mode="before")
+    @classmethod
+    def parse_debug(cls, value):
+        if isinstance(value, str):
+            normalized = value.strip().lower()
+            if normalized in {"release", "prod", "production"}:
+                return False
+            if normalized in {"dev", "development"}:
+                return True
+        return value
+
+    # ── AI (Optional) ─────────────────────────────────────────────────
+    ANTHROPIC_API_KEY: str = ""
 
     model_config = SettingsConfigDict(
         env_file=".env",       # Auto-load .env from CWD

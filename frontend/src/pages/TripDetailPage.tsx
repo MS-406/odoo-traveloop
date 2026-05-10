@@ -12,6 +12,7 @@ import StopCard from "@/components/trips/StopCard";
 import ShareButton from "@/components/trips/ShareButton";
 import AddToTripModal from "@/components/trips/AddToTripModal";
 import AddBudgetItemModal from "@/components/budget/AddBudgetItemModal";
+import MiniMapPreview from "@/components/map/MiniMapPreview";
 import toast from "react-hot-toast";
 
 export default function TripDetailPage() {
@@ -357,6 +358,13 @@ export default function TripDetailPage() {
                             Browse Destinations →
                         </Link>
                     </div>
+
+                    {/* Mini Map Preview */}
+                    {activeTrip.stops.length > 0 && (
+                      <div className="mt-6">
+                        <MiniMapPreview tripId={activeTrip.id} />
+                      </div>
+                    )}
                 </div>
             </div>
         </div>

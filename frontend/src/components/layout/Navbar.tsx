@@ -1,7 +1,7 @@
 // frontend/src/components/layout/Navbar.tsx
 // Global navigation bar — persistent across all protected routes.
 import { Link, useLocation } from "react-router-dom";
-import { Home, Map, Globe, Compass, Settings, Shield, LogOut, Menu, X } from "lucide-react";
+import { Home, Map, Globe, Compass, Settings, Shield, LogOut, Menu, X, Sparkles, Users2 } from "lucide-react";
 import { useState } from "react";
 import { useAuthStore } from "@/stores/authStore";
 
@@ -15,6 +15,8 @@ export default function Navbar() {
     { to: "/trips", label: "Trips", icon: Map },
     { to: "/cities", label: "Cities", icon: Globe },
     { to: "/activities", label: "Activities", icon: Compass },
+    { to: "/ai-trip-optimizer", label: "AI Optimizer", icon: Sparkles },
+    { to: "/collaborative-trip", label: "Collab", icon: Users2 },
   ];
 
   const isActive = (path: string) => location.pathname === path || (path !== "/dashboard" && location.pathname.startsWith(path));

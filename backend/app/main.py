@@ -54,6 +54,9 @@ from app.routers.budget_items import router as budget_items_router  # noqa: E402
 from app.routers.notes import router as notes_router  # noqa: E402 — Phase 5
 from app.routers.checklist import router as checklist_router  # noqa: E402 — Phase 5
 from app.routers.admin import router as admin_router  # noqa: E402 — Phase 6
+from app.routers.ai_optimizer import router as ai_router  # noqa: E402 — Feature 1
+from app.routers.collaborative import router as collab_router  # noqa: E402 — Feature 2
+from app.routers.map_route import router as map_router  # noqa: E402 — Feature 3
 
 app.include_router(auth_router)
 app.include_router(trips_router)
@@ -65,5 +68,8 @@ app.include_router(budget_items_router)
 app.include_router(notes_router)
 app.include_router(checklist_router)
 app.include_router(admin_router)
+app.include_router(ai_router)
+app.include_router(collab_router)
+app.include_router(map_router)
 
 # SELF-CHECK: dynamic data only ✓ | validated ✓ | paginated N/A | error handled ✓

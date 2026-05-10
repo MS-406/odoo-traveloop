@@ -57,8 +57,8 @@ class StopService:
         self.db.add(stop)
         await self.db.flush()
 
-        # Load city relationship for response
-        await self.db.refresh(stop, ["city"])
+        # Load city + stop_activities relationships for response serialization
+        await self.db.refresh(stop, ["city", "stop_activities"])
         return stop
 
     # ── Update ───────────────────────────────────────────────────────
@@ -83,7 +83,7 @@ class StopService:
                 setattr(stop, field, value)
 
         await self.db.flush()
-        await self.db.refresh(stop, ["city"])
+        await self.db.refresh(stop, ["city", "stop_activities"])
         return stop
 
     # ── Delete ───────────────────────────────────────────────────────

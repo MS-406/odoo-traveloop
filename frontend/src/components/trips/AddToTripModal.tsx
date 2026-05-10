@@ -1,7 +1,6 @@
 // frontend/src/components/trips/AddToTripModal.tsx
 import { useState, useEffect } from "react";
-import { X, MapPin, Loader2, Plus, Check } from "lucide-react";
-import { useTripStore } from "@/stores/tripStore";
+import { X, Loader2, Plus } from "lucide-react";
 import { activitiesApi, type Activity } from "@/api/activities";
 import { tripsApi, type TripListItem, type Trip } from "@/api/trips";
 import toast from "react-hot-toast";
@@ -144,7 +143,7 @@ export default function AddToTripModal({ activity, isOpen, onClose }: AddToTripM
                     className="w-full h-12 rounded-xl border border-surface-border bg-white px-4 text-sm font-medium focus:ring-2 focus:ring-primary/20 focus:border-primary outline-none transition-all appearance-none"
                   >
                     {selectedTrip?.stops.map(stop => (
-                      <option key={stop.id} value={stop.id}>{stop.city.name}</option>
+                      <option key={stop.id} value={stop.id}>{stop.city?.name ?? "Unnamed stop"}</option>
                     ))}
                   </select>
                 )}

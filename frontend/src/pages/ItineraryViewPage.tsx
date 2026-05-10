@@ -2,16 +2,19 @@
 // Read-only itinerary view with timeline and calendar tabs.
 import { useEffect, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, List, CalendarDays, Loader2 } from "lucide-react";
+import { ArrowLeft, List, CalendarDays, Loader2, Map } from "lucide-react";
 import { useTripStore } from "@/stores/tripStore";
 import ItineraryTimeline from "@/components/trips/ItineraryTimeline";
 import ItineraryCalendar from "@/components/trips/ItineraryCalendar";
+import TripRouteMap from "@/components/map/TripRouteMap";
 
 export default function ItineraryViewPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { activeTrip, isTripLoading, fetchTrip } = useTripStore();
-  const [view, setView] = useState<"timeline" | "calendar">("timeline");
+  const searchParams = new URLSearchParams(window.location.search);
+  const initialTab = searchParams.get("tab") === "map" ? "map" : "timeline";
+  const [view, setView] = useState<"timeline" | "calendar" | "map">(initialTab);
 
   useEffect(() => { if (id) fetchTrip(id); }, [id, fetchTrip]);
 
@@ -48,12 +51,21 @@ export default function ItineraryViewPage() {
             <button onClick={() => setView("calendar")} className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${view === "calendar" ? "bg-white shadow-sm text-primary" : "text-text-secondary hover:text-text-primary"}`}>
               <CalendarDays className="h-4 w-4" /> Calendar
             </button>
+            <button onClick={() => setView("map")} className={`flex-1 sm:flex-none flex items-center justify-center gap-2 px-6 py-2.5 rounded-lg text-sm font-bold transition-all ${view === "map" ? "bg-white shadow-sm text-primary" : "text-text-secondary hover:text-text-primary"}`}>
+              <Map className="h-4 w-4" /> Route Map
+            </button>
           </div>
         </div>
-        {view === "timeline" ? (
+        {view === "timeline" && (
           <ItineraryTimeline stops={activeTrip.stops} />
-        ) : (
+        )}
+        {view === "calendar" && (
           <ItineraryCalendar stops={activeTrip.stops} tripStartDate={activeTrip.start_date} tripEndDate={activeTrip.end_date} />
+        )}
+        {view === "map" && (
+          <div className="max-w-none -mx-4 sm:mx-0">
+            <TripRouteMap tripId={activeTrip.id} />
+          </div>
         )}
       </div>
     </div>

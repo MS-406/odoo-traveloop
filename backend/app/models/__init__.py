@@ -12,6 +12,13 @@ from app.models.checklist import ChecklistItem
 from app.models.note import Note
 from app.models.refresh_token import RefreshToken
 from app.models.budget_item import BudgetItem
+from app.models.collaborative import (
+    CollaborativeTrip,
+    CollabMember,
+    CollabStop,
+    CollabVote,
+    CollabComment,
+)
 
 __all__ = [
     "User",
@@ -24,4 +31,9 @@ __all__ = [
     "Note",
     "RefreshToken",
     "BudgetItem",
+    "CollaborativeTrip",
+    "CollabMember",
+    "CollabStop",
+    "CollabVote",
+    "CollabComment",
 ]

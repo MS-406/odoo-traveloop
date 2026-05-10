@@ -1,7 +1,7 @@
 // frontend/src/pages/ActivitySearchPage.tsx
 // Activity browsing with type/cost filters.
 import { useEffect, useState, useCallback } from "react";
-import { Compass, ChevronLeft, ChevronRight, Loader2, Plus } from "lucide-react";
+import { Compass, ChevronLeft, ChevronRight, Plus } from "lucide-react";
 import { activitiesApi, type Activity } from "@/api/activities";
 import ActivityCard from "@/components/activities/ActivityCard";
 import ActivityFilterPanel from "@/components/activities/ActivityFilterPanel";
