@@ -4,6 +4,17 @@ A full-stack personalized travel planning application built with FastAPI + React
 
 ---
 
+## 🔑 Test Accounts
+
+| Role | Email | Password | User ID |
+|------|-------|----------|---------|
+| **Admin** | `admin@traveloop.com` | `Admin123!@` | `b6e29b89-7c8e-40b9-bce5-00012609cfdc` |
+| **Regular User** | `test@traveloop.com` | `Test123!@` | `4e1280ac-0e45-4e1c-ab1a-f09a768d273b` |
+
+> **Note:** The admin account has access to the Admin Panel (`/admin`) for user management and app-wide stats. You can also create new accounts via the Sign Up page.
+
+---
+
 ## Tech Stack
 
 | Layer | Technology | Justification |
