@@ -39,7 +39,7 @@ async def create_budget_item(
         notes=item.notes
     )
     db.add(new_item)
-    await db.commit()
+    await db.flush()
     await db.refresh(new_item)
     return new_item
 
@@ -62,7 +62,6 @@ async def delete_budget_item(
         raise HTTPException(status_code=404, detail="Budget item not found")
 
     await db.delete(item)
-    await db.commit()
     return None
 
 @router.patch("/budget/items/{item_id}", response_model=BudgetItemResponse)
@@ -88,6 +87,6 @@ async def update_budget_item(
     item.amount = item_update.amount
     item.notes = item_update.notes
 
-    await db.commit()
+    await db.flush()
     await db.refresh(item)
     return item

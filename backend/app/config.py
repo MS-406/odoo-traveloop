@@ -38,7 +38,8 @@ class Settings(BaseSettings):
         return value
 
     # ── AI (Optional) ─────────────────────────────────────────────────
-    ANTHROPIC_API_KEY: str = ""
+    GEMINI_API_KEY: str = ""
+    GEMINI_MODEL: str = "gemini-2.5-flash"
 
     model_config = SettingsConfigDict(
         env_file=".env",       # Auto-load .env from CWD

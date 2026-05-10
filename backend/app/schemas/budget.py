@@ -5,7 +5,7 @@
 from decimal import Decimal
 from uuid import UUID
 
-from pydantic import BaseModel
+from pydantic import BaseModel, ConfigDict
 
 
 class CategoryBreakdown(BaseModel):
@@ -34,11 +34,10 @@ class BudgetItemCreate(BudgetItemBase):
     pass
 
 class BudgetItemResponse(BudgetItemBase):
+    model_config = ConfigDict(from_attributes=True)
+
     id: UUID
     trip_id: UUID
-
-    class Config:
-        from_attributes = True
 
 class BudgetSummary(BaseModel):
     """Complete budget summary for a trip."""

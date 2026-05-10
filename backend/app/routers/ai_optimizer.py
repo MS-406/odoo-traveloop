@@ -1,5 +1,5 @@
 # backend/app/routers/ai_optimizer.py
-# AI-powered trip optimizer using Claude API.
+# AI-powered trip optimizer using Gemini API.
 # New file — registered in main.py.
 
 import json
@@ -94,7 +94,7 @@ class TripInsightsResult(BaseModel):
     suggested_cities: list[InsightCitySuggestion]
 
 
-# ── Claude Prompt Builder ────────────────────────────────────────────
+# ── Gemini Prompt Builder ────────────────────────────────────────────
 
 def _build_prompt(req: TripOptimizeRequest) -> str:
     destinations = ", ".join(req.destination_cities)
@@ -147,39 +147,46 @@ Trip data:
 Optimize for {req.priority}. Be realistic with costs for {req.travelers} traveler(s). All costs should be per-person. Return only the JSON object, nothing else."""
 
 
-# ── Claude API Call ──────────────────────────────────────────────────
+# ── Gemini API Call ──────────────────────────────────────────────────
 
-async def _call_claude(prompt: str, retry: bool = False) -> dict:
-    """Call Claude API and return parsed JSON response."""
-    api_key = getattr(settings, "ANTHROPIC_API_KEY", None)
-    if not api_key:
+async def _call_gemini(prompt: str, retry: bool = False) -> dict:
+    """Call Gemini API and return parsed JSON response."""
+    api_key = getattr(settings, "GEMINI_API_KEY", None)
+    if not api_key or api_key == "your_gemini_api_key_here":
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
-            detail="AI optimization service not configured. Set ANTHROPIC_API_KEY in .env",
+            detail="AI optimization service not configured. Set GEMINI_API_KEY in .env",
         )
 
     headers = {
-        "x-api-key": api_key,
-        "anthropic-version": "2023-06-01",
+        "x-goog-api-key": api_key,
         "content-type": "application/json",
     }
+    model = getattr(settings, "GEMINI_MODEL", "gemini-2.5-flash")
+    request_prompt = prompt
+    if retry:
+        request_prompt = (
+            f"{prompt}\n\nYour previous response was not valid JSON. "
+            "Return only a valid JSON object, with no markdown or commentary."
+        )
 
     body = {
-        "model": "claude-sonnet-4-20250514",
-        "max_tokens": 4096,
-        "messages": [{"role": "user", "content": prompt}],
+        "contents": [
+            {
+                "role": "user",
+                "parts": [{"text": request_prompt}],
+            }
+        ],
+        "generationConfig": {
+            "responseMimeType": "application/json",
+            "maxOutputTokens": 4096,
+        },
     }
-
-    if retry:
-        body["messages"].append({
-            "role": "assistant",
-            "content": "{"
-        })
 
     try:
         async with httpx.AsyncClient(timeout=60.0) as client:
             response = await client.post(
-                "https://api.anthropic.com/v1/messages",
+                f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
                 headers=headers,
                 json=body,
             )
@@ -190,7 +197,7 @@ async def _call_claude(prompt: str, retry: bool = False) -> dict:
             detail="AI optimization service timed out. Please try again.",
         )
     except httpx.HTTPStatusError as e:
-        logger.error(f"Claude API error: {e.response.status_code} - {e.response.text}")
+        logger.error(f"Gemini API error: {e.response.status_code} - {e.response.text}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="AI optimization service unavailable",
@@ -198,9 +205,8 @@ async def _call_claude(prompt: str, retry: bool = False) -> dict:
 
     try:
         data = response.json()
-        content = data["content"][0]["text"]
-        if retry:
-            content = "{" + content
+        parts = data["candidates"][0]["content"]["parts"]
+        content = "".join(part.get("text", "") for part in parts)
 
         # Strip any markdown code fences if present
         content = content.strip()
@@ -214,8 +220,8 @@ async def _call_claude(prompt: str, retry: bool = False) -> dict:
     except (json.JSONDecodeError, KeyError, IndexError) as e:
         if not retry:
             logger.warning("JSON parse failed, retrying with stricter prompt")
-            return await _call_claude(prompt, retry=True)
-        logger.error(f"Failed to parse Claude response: {e}")
+            return await _call_gemini(prompt, retry=True)
+        logger.error(f"Failed to parse Gemini response: {e}")
         raise HTTPException(
             status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
             detail="AI returned invalid response. Please try again.",
@@ -228,7 +234,7 @@ async def _call_claude(prompt: str, retry: bool = False) -> dict:
     "/optimize-trip",
     response_model=OptimizationResult,
     summary="AI-powered trip route optimization",
-    description="Sends trip parameters to Claude AI and returns an optimized multi-city route.",
+    description="Sends trip parameters to Gemini and returns an optimized multi-city route.",
 )
 async def optimize_trip(
     body: TripOptimizeRequest,
@@ -243,7 +249,7 @@ async def optimize_trip(
         )
 
     prompt = _build_prompt(body)
-    result = await _call_claude(prompt)
+    result = await _call_gemini(prompt)
 
     return OptimizationResult(**result)
 
