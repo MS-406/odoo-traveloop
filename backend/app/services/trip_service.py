@@ -88,7 +88,9 @@ class TripService:
         )
         self.db.add(trip)
         await self.db.flush()
-        return trip
+
+        # Re-fetch with eager-loaded stops to avoid async lazy-load errors
+        return await self.get_trip(trip.id, user_id)
 
     # ── Update ───────────────────────────────────────────────────────
     async def update_trip(
@@ -176,7 +178,8 @@ class TripService:
             self.db.add(new_stop)
 
         await self.db.flush()
-        return new_trip
+        # Re-fetch with eager-loaded stops
+        return await self.get_trip(new_trip.id, user_id)
 
     # ── Helpers ───────────────────────────────────────────────────────
     @staticmethod
