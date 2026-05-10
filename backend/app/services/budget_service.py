@@ -32,14 +32,15 @@ class BudgetService:
         Returns None if trip not found/not owned.
         Returns dict matching BudgetSummary schema.
         """
-        # Fetch trip with stops → stop_activities → activities
+        # Fetch trip with stops → stop_activities → activities AND budget_items
         q = (
             select(Trip)
             .where(Trip.id == trip_id, Trip.user_id == user_id)
             .options(
                 selectinload(Trip.stops)
                 .selectinload(Stop.stop_activities)
-                .selectinload(StopActivity.activity)
+                .selectinload(StopActivity.activity),
+                selectinload(Trip.budget_items)
             )
         )
         result = await self.db.execute(q)
@@ -56,7 +57,9 @@ class BudgetService:
         category_totals: dict[str, Decimal] = defaultdict(Decimal)
         category_counts: dict[str, int] = defaultdict(int)
         stop_breakdown = []
+        manual_items_list = []
 
+        # 1. Activities from stops
         for stop in trip.stops:
             stop_total = Decimal("0")
             stop_activity_count = 0
@@ -76,6 +79,21 @@ class BudgetService:
                 "city_name": stop.city.name if stop.city else "Unknown",
                 "total_cost": stop_total,
                 "activity_count": stop_activity_count,
+            })
+            
+        # 2. Manual budget items
+        for item in trip.budget_items:
+            cost = Decimal(str(item.amount))
+            total += cost
+            category_totals[item.category] += cost
+            category_counts[item.category] += 1
+            manual_items_list.append({
+                "id": str(item.id),
+                "trip_id": str(item.trip_id),
+                "title": item.title,
+                "category": item.category,
+                "amount": cost,
+                "notes": item.notes,
             })
 
         # Duration in days (min 1)
@@ -101,6 +119,7 @@ class BudgetService:
             "trip_duration_days": duration,
             "category_breakdown": categories,
             "stop_breakdown": stop_breakdown,
+            "manual_items": manual_items_list,
         }
 
 # SELF-CHECK: dynamic data only ✓ | validated ✓ | paginated N/A | error handled ✓

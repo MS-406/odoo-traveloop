@@ -11,6 +11,7 @@ from app.models.stop_activity import StopActivity
 from app.models.checklist import ChecklistItem
 from app.models.note import Note
 from app.models.refresh_token import RefreshToken
+from app.models.budget_item import BudgetItem
 
 __all__ = [
     "User",
@@ -22,4 +23,5 @@ __all__ = [
     "ChecklistItem",
     "Note",
     "RefreshToken",
+    "BudgetItem",
 ]

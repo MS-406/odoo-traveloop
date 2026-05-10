@@ -2,21 +2,54 @@
 // Trip overview with stops summary, actions.
 // Depends on: Phase 3 / tripStore, StopCard, ShareButton
 
-import { useEffect } from "react";
+import { useState, useEffect } from "react";
 import { Link, useNavigate, useParams } from "react-router-dom";
-import { ArrowLeft, Calendar, Edit, MapPin, Plus, Route, Trash2, DollarSign, FileText, ListChecks, Globe } from "lucide-react";
+import { ArrowLeft, Calendar, Edit, MapPin, Plus, Route, Trash2, DollarSign, FileText, ListChecks, Globe, X, Check } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useTripStore } from "@/stores/tripStore";
+import { activitiesApi, type Activity } from "@/api/activities";
 import StopCard from "@/components/trips/StopCard";
 import ShareButton from "@/components/trips/ShareButton";
+import AddToTripModal from "@/components/trips/AddToTripModal";
 import toast from "react-hot-toast";
 
 export default function TripDetailPage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const { activeTrip, isTripLoading, fetchTrip, deleteTrip, deleteStop } = useTripStore();
+  const [suggestedActivities, setSuggestedActivities] = useState<Activity[]>([]);
+  const [removedSuggestionIds, setRemovedSuggestionIds] = useState<Set<string>>(new Set());
+  const [activityToAddToTrip, setActivityToAddToTrip] = useState<Activity | null>(null);
 
   useEffect(() => { if (id) fetchTrip(id); }, [id, fetchTrip]);
+
+  useEffect(() => {
+    if (activeTrip?.stops.length) {
+      (async () => {
+        try {
+          // Fetch activities for each city in the trip
+          const cityIds = [...new Set(activeTrip.stops.map(s => s.city_id))];
+          const allSuggestions: Activity[] = [];
+          
+          for (const cityId of cityIds.slice(0, 3)) { // Limit to first 3 cities to avoid over-fetching
+            const { data } = await activitiesApi.search({ city_id: cityId, limit: 5 });
+            allSuggestions.push(...data.items);
+          }
+          
+          // Filter out activities already added to the trip
+          const addedActivityIds = new Set(
+            activeTrip.stops.flatMap(s => s.stop_activities.map(sa => sa.activity_id))
+          );
+          
+          setSuggestedActivities(
+            allSuggestions.filter(a => !addedActivityIds.has(a.id)).slice(0, 10)
+          );
+        } catch (err) {
+          console.error("Failed to load suggestions", err);
+        }
+      })();
+    }
+  }, [activeTrip]);
 
   const handleDelete = async () => {
     if (!id || !confirm("Delete this trip? This cannot be undone.")) return;
@@ -30,6 +63,10 @@ export default function TripDetailPage() {
     catch { toast.error("Failed to remove stop"); }
   };
 
+  const removeSuggestion = (activityId: string) => {
+    setRemovedSuggestionIds(prev => new Set(prev).add(activityId));
+  };
+
   if (isTripLoading || !activeTrip) {
     return (
       <div className="min-h-screen bg-surface flex items-center justify-center">
@@ -39,8 +76,10 @@ export default function TripDetailPage() {
   }
 
   // Calculate budget stats
-  const totalBudget = activeTrip.total_budget || 3500; // Mock default if missing
-  const totalSpent = 2450; // Mock current spend
+  const totalBudget = parseFloat(activeTrip.total_budget || "0");
+  const totalSpent = parseFloat(activeTrip.total_budget || "0"); // Placeholder for actual spent logic if different
+
+  const visibleSuggestions = suggestedActivities.filter(a => !removedSuggestionIds.has(a.id));
 
   return (
     <div className="min-h-screen bg-surface font-sans pb-24">
@@ -48,7 +87,7 @@ export default function TripDetailPage() {
       <div className="relative h-72 sm:h-96 w-full">
         {/* Placeholder for destination image */}
         <div className="absolute inset-0 bg-gradient-to-r from-primary to-accent overflow-hidden">
-            <img src="https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e?q=80&w=2000&auto=format&fit=crop" alt="Destination" className="w-full h-full object-cover opacity-60 mix-blend-overlay" />
+            <img src={activeTrip.cover_photo || "https://images.unsplash.com/photo-1613395877344-13d4a8e0d49e?q=80&w=2000&auto=format&fit=crop"} alt="Destination" className="w-full h-full object-cover opacity-60 mix-blend-overlay" />
         </div>
         
         {/* Glassmorphism Overlay */}
@@ -141,28 +180,43 @@ export default function TripDetailPage() {
                     )}
                 </div>
 
-                {/* Horizontal Activities Scroll (Design Element) */}
-                <div>
-                     <h2 className="text-2xl font-display font-bold text-text-primary mb-6">Suggested Activities</h2>
-                     <div className="flex gap-4 overflow-x-auto pb-4 snap-x hide-scrollbar">
-                        {[
-                            { title: "Catamaran Sunset Cruise", location: "Oia", price: "$120", time: "3h" },
-                            { title: "Volcano Tour", location: "Fira", price: "$45", time: "4h" },
-                            { title: "Wine Tasting", location: "Pyrgos", price: "$60", time: "2h" }
-                        ].map((act, i) => (
-                             <div key={i} className="min-w-[240px] snap-start bg-surface-card border border-surface-border rounded-2xl p-4 shadow-sm hover:shadow-ambient transition-all cursor-pointer group">
+                {/* Horizontal Activities Scroll */}
+                {visibleSuggestions.length > 0 && (
+                  <div>
+                      <h2 className="text-2xl font-display font-bold text-text-primary mb-6">Suggested Activities</h2>
+                      <div className="flex gap-4 overflow-x-auto pb-4 snap-x hide-scrollbar">
+                        {visibleSuggestions.map((act) => (
+                              <div key={act.id} className="min-w-[240px] snap-start bg-surface-card border border-surface-border rounded-2xl p-4 shadow-sm hover:shadow-ambient transition-all cursor-pointer group relative">
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); removeSuggestion(act.id); }}
+                                  className="absolute top-2 right-2 p-1.5 rounded-full bg-white/80 opacity-0 group-hover:opacity-100 transition-opacity hover:bg-white text-text-secondary z-10"
+                                >
+                                  <X className="h-3.5 w-3.5" />
+                                </button>
                                 <div className="h-32 rounded-xl bg-surface-dim mb-4 overflow-hidden relative">
+                                    {act.image_url ? (
+                                      <img src={act.image_url} alt={act.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                                    ) : (
+                                      <div className="w-full h-full flex items-center justify-center text-3xl">🎯</div>
+                                    )}
                                     <div className="absolute inset-0 bg-primary/10 group-hover:bg-transparent transition-colors"></div>
                                 </div>
-                                <h3 className="font-semibold text-text-primary">{act.title}</h3>
+                                <h3 className="font-semibold text-text-primary truncate">{act.name}</h3>
                                 <div className="flex items-center justify-between mt-3 text-sm text-text-secondary">
-                                    <span className="flex items-center gap-1"><MapPin className="h-3 w-3"/> {act.location}</span>
-                                    <span className="font-medium text-success">{act.price}</span>
+                                    <span className="flex items-center gap-1"><MapPin className="h-3 w-3"/> {act.type}</span>
+                                    <span className="font-medium text-success">${parseFloat(act.cost).toFixed(0)}</span>
                                 </div>
-                             </div>
+                                <button 
+                                  onClick={(e) => { e.stopPropagation(); setActivityToAddToTrip(act); }}
+                                  className="mt-4 w-full py-2 rounded-lg bg-primary text-white text-xs font-bold opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-1.5"
+                                >
+                                  <Plus className="h-3.5 w-3.5" /> Add to Trip
+                                </button>
+                              </div>
                         ))}
-                     </div>
-                </div>
+                      </div>
+                  </div>
+                )}
 
             </div>
 
@@ -172,28 +226,13 @@ export default function TripDetailPage() {
                     <div className="bg-surface-card border border-surface-border rounded-2xl p-6 shadow-ambient">
                         <h3 className="text-lg font-display font-bold text-text-primary mb-6">Budget Overview</h3>
                         
-                        {/* Circular Progress Mock */}
-                        <div className="flex justify-center mb-8">
-                            <div className="relative w-40 h-40 flex items-center justify-center rounded-full border-8 border-surface-border/50">
-                                <div className="absolute inset-0 rounded-full border-8 border-accent border-t-transparent border-l-transparent transform -rotate-45"></div>
-                                <div className="text-center">
-                                    <p className="text-3xl font-display font-bold text-text-primary">70%</p>
-                                    <p className="text-sm font-medium text-text-muted mt-1">Spent</p>
-                                </div>
-                            </div>
-                        </div>
-
                         <div className="space-y-4">
                             <div className="flex justify-between items-center text-sm">
-                                <span className="text-text-secondary">Total Spent</span>
-                                <span className="font-bold text-text-primary text-base">${totalSpent.toLocaleString()}</span>
-                            </div>
-                            <div className="flex justify-between items-center text-sm">
                                 <span className="text-text-secondary">Total Budget</span>
-                                <span className="font-medium text-text-primary">${totalBudget.toLocaleString()}</span>
+                                <span className="font-bold text-text-primary text-xl">${totalBudget.toLocaleString()}</span>
                             </div>
                             <div className="w-full h-2.5 bg-surface-dim rounded-full mt-3 overflow-hidden">
-                                <div className="h-full bg-accent rounded-full shadow-sm" style={{ width: '70%' }}></div>
+                                <div className="h-full bg-accent rounded-full shadow-sm" style={{ width: totalBudget > 0 ? '100%' : '0%' }}></div>
                             </div>
                         </div>
 
@@ -213,6 +252,14 @@ export default function TripDetailPage() {
                 </div>
             </div>
         </div>
+
+        {activityToAddToTrip && (
+          <AddToTripModal 
+            activity={activityToAddToTrip} 
+            isOpen={!!activityToAddToTrip} 
+            onClose={() => setActivityToAddToTrip(null)} 
+          />
+        )}
 
       </div>
     </div>

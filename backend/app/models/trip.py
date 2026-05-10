@@ -54,6 +54,9 @@ class Trip(Base):
     notes: Mapped[list["Note"]] = relationship(  # noqa: F821
         "Note", back_populates="trip", cascade="all, delete-orphan"
     )
+    budget_items: Mapped[list["BudgetItem"]] = relationship(  # noqa: F821
+        "BudgetItem", back_populates="trip", cascade="all, delete-orphan"
+    )
 
     def __repr__(self) -> str:
         return f"<Trip {self.name}>"

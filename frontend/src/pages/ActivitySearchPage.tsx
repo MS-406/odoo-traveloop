@@ -1,11 +1,12 @@
 // frontend/src/pages/ActivitySearchPage.tsx
 // Activity browsing with type/cost filters.
 import { useEffect, useState, useCallback } from "react";
-import { Compass, ChevronLeft, ChevronRight, Loader2 } from "lucide-react";
+import { Compass, ChevronLeft, ChevronRight, Loader2, Plus } from "lucide-react";
 import { activitiesApi, type Activity } from "@/api/activities";
 import ActivityCard from "@/components/activities/ActivityCard";
 import ActivityFilterPanel from "@/components/activities/ActivityFilterPanel";
 import ActivityQuickView from "@/components/activities/ActivityQuickView";
+import AddToTripModal from "@/components/trips/AddToTripModal";
 import toast from "react-hot-toast";
 
 export default function ActivitySearchPage() {
@@ -17,6 +18,7 @@ export default function ActivitySearchPage() {
   const [selectedType, setSelectedType] = useState("");
   const [maxCost, setMaxCost] = useState("");
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
+  const [activityToAddToTrip, setActivityToAddToTrip] = useState<Activity | null>(null);
 
   const fetchActivities = useCallback(async () => {
     setLoading(true);
@@ -53,7 +55,25 @@ export default function ActivitySearchPage() {
           <div className="text-center py-20 glass-card text-text-muted"><Compass className="h-12 w-12 mx-auto mb-4 opacity-40 text-secondary" /><p className="text-base font-medium">No activities found.</p></div>
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
-            {activities.map((a) => (<ActivityCard key={a.id} activity={a} onClick={setSelectedActivity} />))}
+            {activities.map((a) => (
+              <ActivityCard 
+                key={a.id} 
+                activity={a} 
+                onClick={setSelectedActivity} 
+                action={
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setActivityToAddToTrip(a);
+                    }}
+                    className="p-2 rounded-lg bg-primary/5 text-primary hover:bg-primary/10 transition-colors"
+                    title="Add to Trip"
+                  >
+                    <Plus className="h-4 w-4" />
+                  </button>
+                }
+              />
+            ))}
           </div>
         )}
         {pages > 1 && (
@@ -64,6 +84,13 @@ export default function ActivitySearchPage() {
           </div>
         )}
         {selectedActivity && <ActivityQuickView activity={selectedActivity} onClose={() => setSelectedActivity(null)} />}
+        {activityToAddToTrip && (
+          <AddToTripModal 
+            activity={activityToAddToTrip} 
+            isOpen={!!activityToAddToTrip} 
+            onClose={() => setActivityToAddToTrip(null)} 
+          />
+        )}
       </div>
     </div>
   );

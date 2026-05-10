@@ -23,6 +23,22 @@ class StopBudget(BaseModel):
     activity_count: int
 
 
+class BudgetItemBase(BaseModel):
+    title: str
+    category: str
+    amount: Decimal
+    notes: str | None = None
+
+class BudgetItemCreate(BudgetItemBase):
+    pass
+
+class BudgetItemResponse(BudgetItemBase):
+    id: str
+    trip_id: str
+
+    class Config:
+        from_attributes = True
+
 class BudgetSummary(BaseModel):
     """Complete budget summary for a trip."""
     trip_id: str
@@ -32,5 +48,6 @@ class BudgetSummary(BaseModel):
     trip_duration_days: int
     category_breakdown: list[CategoryBreakdown]
     stop_breakdown: list[StopBudget]
+    manual_items: list[BudgetItemResponse]
 
 # SELF-CHECK: dynamic data only ✓ | validated ✓ | paginated N/A | error handled ✓

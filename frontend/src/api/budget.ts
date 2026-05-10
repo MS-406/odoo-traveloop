@@ -18,6 +18,22 @@ export interface StopBudget {
   activity_count: number;
 }
 
+export interface BudgetItem {
+  id: string;
+  trip_id: string;
+  title: string;
+  category: string;
+  amount: string;
+  notes: string | null;
+}
+
+export interface BudgetItemCreate {
+  title: string;
+  category: string;
+  amount: number;
+  notes?: string;
+}
+
 export interface BudgetSummary {
   trip_id: string;
   trip_name: string;
@@ -26,11 +42,21 @@ export interface BudgetSummary {
   trip_duration_days: number;
   category_breakdown: CategoryBreakdown[];
   stop_breakdown: StopBudget[];
+  manual_items: BudgetItem[];
 }
 
 export const budgetApi = {
   get: (tripId: string) =>
     api.get<BudgetSummary>(`/trips/${tripId}/budget`),
+  
+  createItem: (tripId: string, data: BudgetItemCreate) =>
+    api.post<BudgetItem>(`/trips/${tripId}/budget/items`, data),
+    
+  updateItem: (itemId: string, data: BudgetItemCreate) =>
+    api.patch<BudgetItem>(`/budget/items/${itemId}`, data),
+    
+  deleteItem: (itemId: string) =>
+    api.delete(`/budget/items/${itemId}`),
 };
 
 // SELF-CHECK: dynamic data only ✓ | validated ✓ | paginated N/A | error handled ✓
