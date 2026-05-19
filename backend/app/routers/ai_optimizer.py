@@ -23,6 +23,7 @@ from app.models.stop import Stop
 from app.models.stop_activity import StopActivity
 from app.models.trip import Trip
 from app.models.user import User
+from app.utils.cache import cache_get, cache_set, make_key
 
 logger = logging.getLogger(__name__)
 
@@ -179,12 +180,12 @@ async def _call_gemini(prompt: str, retry: bool = False) -> dict:
         ],
         "generationConfig": {
             "responseMimeType": "application/json",
-            "maxOutputTokens": 4096,
+            "maxOutputTokens": 16384,
         },
     }
 
     try:
-        async with httpx.AsyncClient(timeout=60.0) as client:
+        async with httpx.AsyncClient(timeout=120.0) as client:
             response = await client.post(
                 f"https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent",
                 headers=headers,
@@ -248,10 +249,18 @@ async def optimize_trip(
             detail="end_date must be after start_date",
         )
 
-    prompt = _build_prompt(body)
-    result = await _call_gemini(prompt)
+    # Cache identical AI requests for 1 hour to avoid redundant Gemini calls
+    cache_key = make_key("ai_optimize", body.model_dump())
+    cached = cache_get(cache_key)
+    if cached is not None:
+        logger.info("AI optimize: cache hit")
+        return cached
 
-    return OptimizationResult(**result)
+    prompt = _build_prompt(body)
+    result_dict = await _call_gemini(prompt)
+    result = OptimizationResult(**result_dict)
+    cache_set(cache_key, result, ttl_seconds=3600)  # Cache for 1 hour
+    return result
 
 
 async def _get_trip_for_insights(

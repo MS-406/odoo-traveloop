@@ -3,6 +3,7 @@
 // Depends on: Phase 3 / api/trips.ts (TripListItem type)
 
 import { Link } from "react-router-dom";
+import React from "react";
 import { Calendar, MapPin, Globe, Lock, Copy } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import type { TripListItem } from "@/api/trips";
@@ -13,7 +14,7 @@ interface TripCardProps {
   trip: TripListItem;
 }
 
-export default function TripCard({ trip }: TripCardProps) {
+const TripCard = React.memo(function TripCard({ trip }: TripCardProps) {
   const { copyTrip } = useTripStore();
 
   const handleCopy = async (e: React.MouseEvent) => {
@@ -115,6 +116,6 @@ export default function TripCard({ trip }: TripCardProps) {
       </div>
     </Link>
   );
-}
+});
 
-// SELF-CHECK: dynamic data only ✓ | validated ✓ | paginated N/A | error handled ✓
+export default TripCard;

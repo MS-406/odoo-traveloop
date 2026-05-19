@@ -1,0 +1,33 @@
+# Render Blueprint — one-click deploy for backend + PostgreSQL
+# https://render.com/docs/blueprint-spec
+
+databases:
+  - name: traveloop-db
+    plan: free
+    databaseName: traveloop
+    user: traveloop
+
+services:
+  - type: web
+    name: traveloop-api
+    runtime: docker
+    dockerfilePath: backend/Dockerfile
+    dockerContext: backend
+    plan: free
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: traveloop-db
+          property: connectionURI
+        # Render gives psycopg2 URI; we need asyncpg
+        # The start script will handle the conversion
+      - key: JWT_SECRET_KEY
+        generateValue: true
+      - key: GEMINI_API_KEY
+        sync: false  # Set manually in Render dashboard
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: FRONTEND_URL
+        sync: false  # Set to your Vercel URL after deploy
+      - key: DEBUG
+        value: "false"

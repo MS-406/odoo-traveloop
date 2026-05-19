@@ -20,6 +20,7 @@ from app.schemas.activity import (
     StopActivityRead,
 )
 from app.services.activity_service import ActivityService
+from app.utils.cache import cache_get, cache_set, make_key
 
 router = APIRouter(tags=["activities"])
 
@@ -47,12 +48,20 @@ async def list_activities(
         except ValueError:
             raise HTTPException(status_code=400, detail="Invalid city_id format")
 
+    cache_params = {"type": type, "max_cost": max_cost, "city_id": city_id, "page": page, "limit": limit}
+    key = make_key("activities_list", cache_params)
+    cached = cache_get(key)
+    if cached is not None:
+        return cached
+
     service = ActivityService(db)
     activities, total = await service.search_activities(
         activity_type=type, max_cost=max_cost, city_id=cid, page=page, limit=limit
     )
     items = [ActivityRead.model_validate(a) for a in activities]
-    return PaginatedActivities.build(items=items, total=total, page=page, limit=limit)
+    result = PaginatedActivities.build(items=items, total=total, page=page, limit=limit)
+    cache_set(key, result, ttl_seconds=600)  # Cache for 10 minutes
+    return result
 
 
 # ── GET /activities/{id} ─────────────────────────────────────────────
@@ -70,11 +79,19 @@ async def get_activity(
     except ValueError:
         raise HTTPException(status_code=400, detail="Invalid activity ID format")
 
+    key = make_key("activity_detail", {"id": activity_id})
+    cached = cache_get(key)
+    if cached is not None:
+        return cached
+
     service = ActivityService(db)
     activity = await service.get_activity(aid)
     if not activity:
         raise HTTPException(status_code=404, detail="Activity not found")
-    return activity
+
+    result = ActivityRead.model_validate(activity)
+    cache_set(key, result, ttl_seconds=1800)  # Cache for 30 minutes
+    return result
 
 
 # ── POST /stops/{stop_id}/activities ─────────────────────────────────

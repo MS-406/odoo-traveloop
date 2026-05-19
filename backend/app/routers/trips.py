@@ -18,6 +18,7 @@ from app.schemas.trip import (
     TripUpdate,
 )
 from app.services.trip_service import TripService
+from app.utils.cache import cache_get, cache_set, make_key
 
 router = APIRouter(prefix="/trips", tags=["trips"])
 
@@ -198,6 +199,12 @@ async def get_public_trip(
     share_code: str,
     db: AsyncSession = Depends(get_db),
 ):
+    # Cache public trips by share code — they are read-only and change rarely.
+    key = make_key("public_trip", {"code": share_code})
+    cached = cache_get(key)
+    if cached is not None:
+        return cached
+
     from sqlalchemy import select
     from sqlalchemy.orm import selectinload
     from app.models.trip import Trip
@@ -212,6 +219,9 @@ async def get_public_trip(
     trip = result.scalar_one_or_none()
     if not trip:
         raise HTTPException(status_code=404, detail="Trip not found or not public")
-    return trip
+
+    validated = TripRead.model_validate(trip)
+    cache_set(key, validated, ttl_seconds=300)  # Cache for 5 minutes
+    return validated
 
 # SELF-CHECK: dynamic data only ✓ | validated ✓ | paginated ✓ | error handled ✓

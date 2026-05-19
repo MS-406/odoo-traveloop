@@ -2,6 +2,7 @@
 // City card with image, cost index, popularity — for city search page.
 // Depends on: Phase 4 / api/cities.ts
 
+import React from "react";
 import { MapPin, DollarSign, Star } from "lucide-react";
 import type { City } from "@/api/cities";
 
@@ -10,7 +11,7 @@ interface CityCardProps {
   onClick?: (city: City) => void;
 }
 
-export default function CityCard({ city, onClick }: CityCardProps) {
+const CityCard = React.memo(function CityCard({ city, onClick }: CityCardProps) {
   const costLevel = city.cost_index ? parseFloat(city.cost_index) : 0;
   const popularity = city.popularity_score ? parseFloat(city.popularity_score) : 0;
 
@@ -65,6 +66,6 @@ export default function CityCard({ city, onClick }: CityCardProps) {
       </div>
     </div>
   );
-}
+});
 
-// SELF-CHECK: dynamic data only ✓ | validated ✓ | paginated N/A | error handled ✓
+export default CityCard;

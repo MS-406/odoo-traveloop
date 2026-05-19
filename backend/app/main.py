@@ -26,10 +26,12 @@ app = FastAPI(
 )
 
 # ── CORS ──────────────────────────────────────────────────────────────────
-# Allow the React frontend dev server to call the API
+# Allow the React frontend (local dev + production Vercel URL)
+# FRONTEND_URL can be comma-separated: "http://localhost:5173,https://my-app.vercel.app"
+_origins = [o.strip() for o in settings.FRONTEND_URL.split(",") if o.strip()]
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[settings.FRONTEND_URL],
+    allow_origins=_origins,
     allow_credentials=True,          # Required for HTTP-only refresh cookies
     allow_methods=["*"],
     allow_headers=["*"],

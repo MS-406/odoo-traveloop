@@ -2,6 +2,7 @@
 // Activity card with type badge, cost, and duration.
 // Depends on: Phase 4 / api/activities.ts
 
+import React from "react";
 import { Clock, DollarSign } from "lucide-react";
 import type { Activity } from "@/api/activities";
 
@@ -29,7 +30,7 @@ interface ActivityCardProps {
   action?: React.ReactNode;
 }
 
-export default function ActivityCard({ activity, onClick, action }: ActivityCardProps) {
+const ActivityCard = React.memo(function ActivityCard({ activity, onClick, action }: ActivityCardProps) {
   const cost = parseFloat(activity.cost);
 
   return (
@@ -85,6 +86,6 @@ export default function ActivityCard({ activity, onClick, action }: ActivityCard
       </div>
     </div>
   );
-}
+});
 
-// SELF-CHECK: dynamic data only ✓ | validated ✓ | paginated N/A | error handled ✓
+export default ActivityCard;

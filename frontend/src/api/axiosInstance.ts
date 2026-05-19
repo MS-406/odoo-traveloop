@@ -5,9 +5,10 @@
 
 import axios, { AxiosError, InternalAxiosRequestConfig } from "axios";
 
-// Base URL proxied through Vite config — /api rewrites to http://localhost:8000
+// In production (Vercel), VITE_API_URL points to the Render backend.
+// In local dev, falls back to "/api" which Vite proxies to localhost:8000.
 const api = axios.create({
-  baseURL: "/api",
+  baseURL: import.meta.env.VITE_API_URL || "/api",
   headers: { "Content-Type": "application/json" },
   withCredentials: true, // Required for HTTP-only refresh token cookies
 });

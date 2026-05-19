@@ -35,6 +35,7 @@ export default function StopForm({ onSubmit, onClose, isLoading, initialCity }: 
   const [cities, setCities] = useState<City[]>([]);
   const [selectedCity, setSelectedCity] = useState<SelectableCity | null>(null);
   const [showDropdown, setShowDropdown] = useState(false);
+  const [isSearching, setIsSearching] = useState(false);
 
   const { register, handleSubmit, setValue, formState: { errors } } = useForm<StopFormValues>({
     resolver: zodResolver(stopSchema),
@@ -52,21 +53,25 @@ export default function StopForm({ onSubmit, onClose, isLoading, initialCity }: 
   // Debounced city search
   useEffect(() => {
     const timer = setTimeout(async () => {
-      if (citySearch.length >= 2) {
+      if (citySearch.length >= 2 && !selectedCity) {
+        setIsSearching(true);
         try {
           const { data } = await citiesApi.search({ q: citySearch, limit: 8 });
           setCities(data.items);
           setShowDropdown(true);
         } catch {
           toast.error("Failed to search cities");
+        } finally {
+          setIsSearching(false);
         }
       } else {
         setCities([]);
         setShowDropdown(false);
+        setIsSearching(false);
       }
     }, 300); // 300ms debounce
     return () => clearTimeout(timer);
-  }, [citySearch]);
+  }, [citySearch, selectedCity]);
 
   const selectCity = (city: City) => {
     setSelectedCity(city);
@@ -87,7 +92,8 @@ export default function StopForm({ onSubmit, onClose, isLoading, initialCity }: 
 
         <form onSubmit={handleSubmit(onSubmit)} className="space-y-4" noValidate>
           {/* City search */}
-          <div className="relative">
+          {/* Use overflow-visible wrapper so the dropdown isn't clipped by the modal card */}
+          <div className="relative" style={{ overflow: 'visible' }}>
             <label className="block text-sm font-medium text-text-primary mb-1.5">City</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted" />
@@ -101,32 +107,53 @@ export default function StopForm({ onSubmit, onClose, isLoading, initialCity }: 
                     setValue("city_id", "");
                   }
                 }}
-                placeholder="Search cities..."
+                onFocus={() => {
+                  if (cities.length > 0) setShowDropdown(true);
+                }}
+                onBlur={() => {
+                  // Delay hiding so clicks on dropdown items fire first
+                  setTimeout(() => setShowDropdown(false), 150);
+                }}
+                placeholder="Search cities (type at least 2 chars)..."
+                autoComplete="off"
                 className={`w-full pl-10 pr-4 py-2.5 rounded-lg border bg-white text-sm
                   focus:outline-none focus:ring-2 focus:ring-primary/30 focus:border-primary transition-colors
                   ${errors.city_id ? "border-danger" : "border-surface-border"}`}
               />
+              {isSearching && (
+                <span className="absolute right-3 top-1/2 -translate-y-1/2">
+                  <span className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin block" />
+                </span>
+              )}
               <input type="hidden" {...register("city_id")} />
             </div>
             {errors.city_id && <p className="mt-1 text-xs text-danger">{errors.city_id.message}</p>}
 
-            {/* Dropdown */}
-            {showDropdown && cities.length > 0 && (
-              <div className="absolute z-10 w-full mt-1 bg-white border border-surface-border rounded-lg shadow-lg max-h-48 overflow-auto">
-                {cities.map((city) => (
-                  <button
-                    key={city.id}
-                    type="button"
-                    onClick={() => selectCity(city)}
-                    className="w-full flex items-center gap-3 px-3 py-2 hover:bg-surface transition-colors text-left"
-                  >
-                    <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
-                    <div>
-                      <p className="text-sm font-medium text-text-primary">{city.name}</p>
-                      <p className="text-xs text-text-muted">{city.country}{city.region ? ` · ${city.region}` : ""}</p>
-                    </div>
-                  </button>
-                ))}
+            {/* Dropdown — z-50 ensures it renders above all modal content */}
+            {showDropdown && (
+              <div className="absolute z-50 w-full mt-1 bg-white border border-surface-border rounded-lg shadow-xl max-h-52 overflow-y-auto">
+                {cities.length > 0 ? (
+                  cities.map((city) => (
+                    <button
+                      key={city.id}
+                      type="button"
+                      onMouseDown={(e) => {
+                        // Prevent blur from firing before click
+                        e.preventDefault();
+                        selectCity(city);
+                      }}
+                      className="w-full flex items-center gap-3 px-3 py-2.5 hover:bg-surface transition-colors text-left"
+                    >
+                      <MapPin className="h-4 w-4 text-primary flex-shrink-0" />
+                      <div>
+                        <p className="text-sm font-medium text-text-primary">{city.name}</p>
+                        <p className="text-xs text-text-muted">{city.country}{city.region ? ` · ${city.region}` : ""}</p>
+                      </div>
+                    </button>
+                  ))
+                ) : (
+                  <p className="px-4 py-3 text-sm text-text-muted">No cities found for "{citySearch}"</p>
+                )}
               </div>
             )}
           </div>

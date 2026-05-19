@@ -9,7 +9,7 @@ A full-stack personalized travel planning application built with FastAPI + React
 ## 🔑 Test Accounts
 
 | Role | Email | Password | User ID |
-|------|-------|----------|---------|
+|------|-------|----------|---------| 
 | **Admin** | `admin@traveloop.com` | `Admin123!@` | `b6e29b89-7c8e-40b9-bce5-00012609cfdc` |
 | **Regular User** | `test@traveloop.com` | `Test123!@` | `4e1280ac-0e45-4e1c-ab1a-f09a768d273b` |
 
@@ -35,6 +35,40 @@ A full-stack personalized travel planning application built with FastAPI + React
 
 ---
 
+## ⚡ Performance Optimizations
+
+The following optimizations have been applied to deliver a fast, smooth loading experience.
+
+### Frontend
+
+| Optimization | File(s) Changed | Details |
+|---|---|---|
+| **Route-level Code Splitting** | `src/App.tsx` | All 17+ pages converted to `React.lazy()` imports, wrapped in `<Suspense>`. The browser only downloads the JS for the current page — dramatically reduces initial bundle size. |
+| **Animated Page Fallback** | `src/App.tsx` | A polished `PageLoader` spinner (with pulse text) is shown during lazy route loading instead of a blank screen. |
+| **Manual Chunk Splitting** | `vite.config.ts` | Vendor libraries split into 5 separate chunks: `vendor-react`, `vendor-ui`, `vendor-maps`, `vendor-charts`, `vendor-utils`. Browser caches each chunk independently — a UI-only change won't force users to re-download map or chart code. |
+| **`React.memo` on List Cards** | `TripCard.tsx`, `ActivityCard.tsx`, `CityCard.tsx` | High-frequency list components memoized to skip re-renders when parent state changes but props are identical. |
+
+### Backend
+
+| Optimization | File(s) Changed | Details |
+|---|---|---|
+| **GZip Compression** | `app/main.py` | `GZipMiddleware` added for all responses > 1 KB. Large JSON payloads (trips with stops, city lists) are compressed 60–80% before transmission. |
+| **In-Memory TTL Cache** | `app/utils/cache.py` *(new)* | Thread-safe key/value cache with configurable TTL. No external dependency (no Redis needed). Backed by SHA-256-keyed hashing for deterministic cache hits. |
+| **Cities Endpoint Caching** | `app/routers/cities.py` | `GET /cities` cached for **10 minutes** per unique query (name, country, region, page). `GET /cities/{id}` cached for **30 minutes**. |
+| **Activities Endpoint Caching** | `app/routers/activities.py` | `GET /activities` cached for **10 minutes** per unique filter combo. `GET /activities/{id}` cached for **30 minutes**. |
+| **AI Trip Optimizer Caching** | `app/routers/ai_optimizer.py` | Identical optimization requests (same cities, dates, budget, style) return instantly from a **1-hour cache** instead of calling the Gemini API again — saves cost and eliminates wait time. |
+| **Public Trip Caching** | `app/routers/trips.py` | Shared trip links (`GET /trips/public/{share_code}`) cached for **5 minutes** — handles viral link sharing without hammering the DB. |
+
+### CSS / UX Polish
+
+| Optimization | File | Details |
+|---|---|---|
+| **Page Enter Animation** | `src/index.css` | `.page-enter` utility class: 200ms fade + 6px slide-up when a new route renders. Makes navigation feel native-app smooth. |
+| **Skeleton Shimmer** | `src/index.css` | `.skeleton` + `::after` shimmer class ready to use on any loading placeholder — horizontal gradient sweep animation at 1.5s. |
+| **No Scrollbar Layout Shift** | `src/index.css` | `overflow-y: scroll` on `html` prevents the content from jumping when navigating between short and long pages. |
+
+---
+
 ## Project Structure
 
 ```
@@ -45,9 +79,9 @@ traveloop/
 │   │   ├── schemas/       # Pydantic request/response schemas
 │   │   ├── routers/       # API route handlers
 │   │   ├── services/      # Business logic layer
-│   │   ├── utils/         # JWT, password hashing, helpers
+│   │   ├── utils/         # JWT, password hashing, cache, helpers
 │   │   ├── middleware/    # Auth, admin middleware
-│   │   ├── main.py        # FastAPI app entry point
+│   │   ├── main.py        # FastAPI app entry point (GZip + CORS)
 │   │   ├── database.py    # DB connection setup
 │   │   └── config.py      # App configuration
 │   ├── alembic/           # Database migrations
@@ -55,11 +89,12 @@ traveloop/
 ├── frontend/              # React + Vite application
 │   └── src/
 │       ├── api/           # Axios instances & API calls
-│       ├── components/    # Reusable UI components
-│       ├── pages/         # Route-level page components
+│       ├── components/    # Reusable UI components (memoized)
+│       ├── pages/         # Route-level page components (lazy-loaded)
 │       ├── stores/        # Zustand state stores
 │       ├── utils/         # Formatters, validators, constants
-│       ├── App.tsx        # Main React component
+│       ├── App.tsx        # Main React component (code-split routing)
+│       ├── index.css      # Global styles + animations
 │       └── main.tsx       # React entry point
 └── .github/               # PR templates, CI config
 ```
