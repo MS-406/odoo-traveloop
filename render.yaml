@@ -31,3 +31,12 @@ services:
         sync: false  # Set to your Vercel URL after deploy
       - key: DEBUG
         value: "false"
+
+  - type: web
+    name: traveloop-frontend
+    env: static
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/dist
+    envVars:
+      - key: VITE_API_URL
+        sync: false # Set this in Render dashboard to https://traveloop-api-xxxx.onrender.com
