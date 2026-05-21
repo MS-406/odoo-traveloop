@@ -12,6 +12,7 @@
     "@hello-pangea/dnd": "^16",
     "@hookform/resolvers": "^3",
     "@types/leaflet": "^1.9.12",
+    "@vercel/speed-insights": "^2.0.0",
     "axios": "^1",
     "clsx": "^2",
     "date-fns": "^3",
